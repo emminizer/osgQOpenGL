@@ -25,7 +25,16 @@ osgQOpenGLWindow::~osgQOpenGLWindow()
 
 osgViewer::Viewer* osgQOpenGLWindow::getOsgViewer()
 {
-    return m_renderer;
+    if (!m_renderer)
+        return _viewer.get();
+    return m_renderer->getViewer();
+}
+
+void osgQOpenGLWindow::setOsgViewer(osgViewer::Viewer* viewer)
+{
+    _viewer = viewer;
+    if (m_renderer)
+        m_renderer->setViewer(_viewer.get());
 }
 
 OpenThreads::ReadWriteMutex* osgQOpenGLWindow::mutex()
@@ -52,11 +61,11 @@ void osgQOpenGLWindow::resizeGL(int w, int h)
 void osgQOpenGLWindow::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
-	if (_isFirstFrame) {
-		_isFirstFrame = false;
-		m_renderer->getCamera()->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
-	}
-    m_renderer->frame();
+    if (_isFirstFrame) {
+        _isFirstFrame = false;
+        m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+    }
+    m_renderer->renderFrame();
 }
 
 void osgQOpenGLWindow::keyPressEvent(QKeyEvent* event)
@@ -121,6 +130,8 @@ void osgQOpenGLWindow::createRenderer()
     setDefaultDisplaySettings();
 
     m_renderer = new OSGRenderer(this);
+    if (_viewer.valid())
+        m_renderer->setViewer(_viewer.get());
     double pixelRatio = screen()->devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
 }

@@ -10,6 +10,7 @@
 
 #include <osgQOpenGL/Export>
 #include <OpenThreads/ReadWriteMutex>
+#include <osg/observer_ptr>
 
 #ifdef WIN32
 //#define __gl_h_
@@ -40,6 +41,7 @@ protected:
     OpenThreads::ReadWriteMutex _osgMutex;
 	bool _isFirstFrame {true};
     int _timerIntervalMs {10};
+    osg::observer_ptr<osgViewer::Viewer> _viewer;
     friend class OSGRenderer;
 
     QWidget* _widget = nullptr;
@@ -53,6 +55,8 @@ public:
 
     /** Get osgViewer View */
     osgViewer::Viewer* getOsgViewer();
+    /** Sets the osgViewer that will be used when creating the rendering context. Call at initialization only. */
+    void setOsgViewer(osgViewer::Viewer* viewer);
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();

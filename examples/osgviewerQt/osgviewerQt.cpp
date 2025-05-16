@@ -87,7 +87,9 @@ int main( int argc, char** argv )
     arguments.getApplicationUsage()->addCommandLineOption("--device <device-name>",
                                                           "add named device to the viewer");
 
-    osgQOpenGLWidget widget(&arguments);
+    osgViewer::Viewer viewer(arguments);
+    osgQOpenGLWidget widget;
+    widget.setOsgViewer(&viewer);
 
     QObject::connect(&widget, &osgQOpenGLWidget::initialized,   [  &arguments,
                                                                    &widget ]

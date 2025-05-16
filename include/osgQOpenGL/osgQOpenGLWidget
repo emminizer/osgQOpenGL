@@ -10,13 +10,12 @@
 
 #include <osgQOpenGL/Export>
 #include <OpenThreads/ReadWriteMutex>
+#include <osg/observer_ptr>
 
 #ifdef WIN32
 //#define __gl_h_
 #include <osg/GL>
 #endif
-
-#include <osg/ArgumentParser>
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -39,15 +38,14 @@ protected:
     OSGRenderer* m_renderer {nullptr};
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
-    osg::ArgumentParser* _arguments {nullptr};
 	bool _isFirstFrame {true};
     int _timerIntervalMs {10};
+    osg::observer_ptr<osgViewer::Viewer> _viewer;
 
     friend class OSGRenderer;
 
 public:
     osgQOpenGLWidget(QWidget* parent = nullptr);
-    osgQOpenGLWidget(osg::ArgumentParser* arguments, QWidget* parent = nullptr);
     virtual ~osgQOpenGLWidget();
 
     //! Sets the timer interval for updating the graphics, in ms
@@ -55,6 +53,8 @@ public:
 
     /** Get osgViewer View */
     osgViewer::Viewer* getOsgViewer();
+    /** Sets the osgViewer that will be used when creating the rendering context. Call at initialization only. */
+    void setOsgViewer(osgViewer::Viewer* viewer);
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();
