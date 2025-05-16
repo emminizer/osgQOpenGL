@@ -17,21 +17,22 @@ osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
 {
 }
 
-osgQOpenGLWidget::osgQOpenGLWidget(osg::ArgumentParser* arguments,
-                                   QWidget* parent) :
-    QOpenGLWidget(parent),
-    _arguments(arguments)
-{
-
-}
-
 osgQOpenGLWidget::~osgQOpenGLWidget()
 {
 }
 
 osgViewer::Viewer* osgQOpenGLWidget::getOsgViewer()
 {
-    return m_renderer;
+    if (!m_renderer)
+        return _viewer.get();
+    return m_renderer->getViewer();
+}
+
+void osgQOpenGLWidget::setOsgViewer(osgViewer::Viewer* viewer)
+{
+    _viewer = viewer;
+    if (m_renderer)
+        m_renderer->setViewer(_viewer.get());
 }
 
 OpenThreads::ReadWriteMutex* osgQOpenGLWidget::mutex()
@@ -62,9 +63,9 @@ void osgQOpenGLWidget::paintGL()
     OpenThreads::ScopedReadLock locker(_osgMutex);
 	if (_isFirstFrame) {
 		_isFirstFrame = false;
-		m_renderer->getCamera()->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+		m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
 	}
-	m_renderer->frame();
+	m_renderer->renderFrame();
 }
 
 void osgQOpenGLWidget::keyPressEvent(QKeyEvent* event)
@@ -211,12 +212,10 @@ void osgQOpenGLWidget::createRenderer()
 {
     // call this before creating a View...
     setDefaultDisplaySettings();
-	if (!_arguments) {
-		m_renderer = new OSGRenderer(this);
-	} else {
-		m_renderer = new OSGRenderer(_arguments, this);
-	}
-	QScreen* screen = windowHandle()
+    m_renderer = new OSGRenderer(this);
+    if (_viewer.valid())
+        m_renderer->setViewer(_viewer.get());
+    QScreen* screen = windowHandle()
                       && windowHandle()->screen() ? windowHandle()->screen() :
                       qApp->screens().front();
     m_renderer->setupOSG(width(), height(), screen->devicePixelRatio());

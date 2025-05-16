@@ -19,9 +19,6 @@
 #include <osgQOpenGL/osgQOpenGLWindow>
 #include <osgQOpenGL/osgQOpenGLWidget>
 
-//#include <osgQOpenGL/CullVisitorEx>
-//#include <osgQOpenGL/GraphicsWindowEx>
-
 #include <QApplication>
 #include <QScreen>
 #include <QOpenGLContext>
@@ -117,31 +114,26 @@ namespace
 } // namespace
 
 OSGRenderer::OSGRenderer(QObject* parent)
-    : QObject(parent), osgViewer::Viewer()
+    : QObject(parent)
 {
-    //    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
-    //                     [this]()
-    //    {
-    //        _applicationAboutToQuit = true;
-    //        killTimer(_timerId);
-    //        _timerId = 0;
-    //    });
-}
-
-OSGRenderer::OSGRenderer(osg::ArgumentParser* arguments, QObject* parent)
-    : QObject(parent), osgViewer::Viewer(*arguments)
-{
-    //    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
-    //                     [this]()
-    //    {
-    //        _applicationAboutToQuit = true;
-    //        killTimer(_timerId);
-    //        _timerId = 0;
-    //    });
 }
 
 OSGRenderer::~OSGRenderer()
 {
+}
+
+void OSGRenderer::setViewer(osgViewer::Viewer* viewer)
+{
+  // Calling this more than once, or after initialization, is an error
+  Q_ASSERT(!m_osgInitialized);
+  if (m_osgInitialized)
+    return;
+  m_viewer = viewer;
+}
+
+osgViewer::Viewer* OSGRenderer::getViewer() const
+{
+  return m_viewer.get();
 }
 
 void OSGRenderer::update()
@@ -185,6 +177,12 @@ void OSGRenderer::resize(int windowWidth, int windowHeight, float windowScale)
 
 void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
 {
+    // Create a Viewer as a backstop against the user not setting it manually
+    if (!m_osgInitialized && !m_viewer.valid())
+    {
+      m_ownedViewer = new osgViewer::Viewer;
+      m_viewer = m_ownedViewer.get();
+    }
     m_osgInitialized = true;
     m_windowScale = windowScale;
     m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0,
@@ -192,19 +190,20 @@ void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
     //m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0, windowWidth * windowScale, windowHeight * windowScale);
     // make sure the event queue has the correct window rectangle size and input range
     m_osgWinEmb->getEventQueue()->syncWindowRectangleWithGraphicsContext();
-    _camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
+    auto* camera = m_viewer->getCamera();
+    camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
                                            windowHeight * windowScale));
-    _camera->setGraphicsContext(m_osgWinEmb.get());
+    camera->setGraphicsContext(m_osgWinEmb.get());
     // disable key event (default is Escape key) that the viewer checks on each
     // frame to see
     // if the viewer's done flag should be set to signal end of viewers main
     // loop.
-    setKeyEventSetsDone(0);
-    setReleaseContextAtEndOfFrameHint(false);
-    setThreadingModel(osgViewer::Viewer::SingleThreaded);
+    m_viewer->setKeyEventSetsDone(0);
+    m_viewer->setReleaseContextAtEndOfFrameHint(false);
+    m_viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
     osgViewer::Viewer::Windows windows;
-    getWindows(windows);
+    m_viewer->getWindows(windows);
 
     _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
     _lastFrameStartTime.setStartTick(0);
@@ -364,20 +363,20 @@ void OSGRenderer::wheelEvent(QWheelEvent* event)
 }
 
 // called from ViewerWidget paintGL() method
-void OSGRenderer::frame(double simulationTime)
+void OSGRenderer::renderFrame(double simulationTime)
 {
     // limit the frame rate
-    if(getRunMaxFrameRate() > 0.0)
+    if(m_viewer->getRunMaxFrameRate() > 0.0)
     {
         double dt = _lastFrameStartTime.time_s();
-        double minFrameTime = 1.0 / getRunMaxFrameRate();
+        double minFrameTime = 1.0 / m_viewer->getRunMaxFrameRate();
 
         if(dt < minFrameTime)
             QThread::usleep(static_cast<unsigned int>(1000000.0 * (minFrameTime - dt)));
     }
 
     // avoid excessive CPU loading when no frame is required in ON_DEMAND mode
-    if(getRunFrameScheme() == osgViewer::ViewerBase::ON_DEMAND)
+    if(m_viewer->getRunFrameScheme() == osgViewer::ViewerBase::ON_DEMAND)
     {
         double dt = _lastFrameStartTime.time_s();
 
@@ -390,20 +389,16 @@ void OSGRenderer::frame(double simulationTime)
     _lastFrameStartTime.setStartTick();
     // make frame
 
-    osgViewer::Viewer::frame(simulationTime);
+    m_viewer->frame(simulationTime);
 }
 
 void OSGRenderer::timerEvent(QTimerEvent* /*event*/)
 {
-    // application is about to quit, just return
-    if(_applicationAboutToQuit)
-    {
-        return;
-    }
-
     // ask ViewerWidget to update 3D view
-    if(getRunFrameScheme() != osgViewer::ViewerBase::ON_DEMAND ||
-       checkNeedToDoFrame())
+    if(m_viewer->getRunFrameScheme() != osgViewer::ViewerBase::ON_DEMAND ||
+       m_viewer->checkNeedToDoFrame() ||
+       m_viewer->getDatabasePager()->requiresUpdateSceneGraph() ||
+       m_viewer->getImagePager()->requiresUpdateSceneGraph())
     {
         update();
     }
@@ -419,4 +414,11 @@ void OSGRenderer::setTimerInterval(int intervalMs)
     _timerIntervalMs = intervalMs;
     if (wasRunning)
         _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
+}
+
+osg::GraphicsContext* OSGRenderer::getGraphicsContext() const
+{
+    if (!m_viewer.get() || !m_viewer->getCamera())
+        return nullptr;
+    return m_viewer->getCamera()->getGraphicsContext();
 }
