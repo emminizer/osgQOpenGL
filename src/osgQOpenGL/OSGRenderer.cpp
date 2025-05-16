@@ -363,79 +363,6 @@ void OSGRenderer::wheelEvent(QWheelEvent* event)
          osgGA::GUIEventAdapter::SCROLL_RIGHT));
 }
 
-bool OSGRenderer::checkEvents()
-{
-    // check events from any attached sources
-    for(Devices::iterator eitr = _eventSources.begin();
-        eitr != _eventSources.end();
-        ++eitr)
-    {
-        osgGA::Device* es = eitr->get();
-
-        if(es->getCapabilities() & osgGA::Device::RECEIVE_EVENTS)
-        {
-            if(es->checkEvents())
-                return true;
-        }
-
-    }
-
-    // get events from all windows attached to Viewer.
-    Windows windows;
-    getWindows(windows);
-
-    for(Windows::iterator witr = windows.begin();
-        witr != windows.end();
-        ++witr)
-    {
-        if((*witr)->checkEvents())
-            return true;
-    }
-
-    return false;
-}
-
-bool OSGRenderer::checkNeedToDoFrame()
-{
-    // check if any event handler has prompted a redraw
-    if(_requestRedraw)
-        return true;
-
-    if(_requestContinousUpdate)
-        return true;
-
-    // check if the view needs to update the scene graph
-    // this check if camera has update callback and if scene requires to update scene graph
-    if(requiresUpdateSceneGraph())
-        return true;
-
-    // check if the database pager needs to update the scene
-    if(getDatabasePager()->requiresUpdateSceneGraph())
-        return true;
-
-    // check if the image pager needs to update the scene
-    if(getImagePager()->requiresUpdateSceneGraph())
-        return true;
-
-
-    // check if the scene needs to be redrawn
-    if(requiresRedraw())
-        return true;
-
-    // check if events are available and need processing
-    if(checkEvents())
-        return true;
-
-    // and check again if any event handler has prompted a redraw
-    if(_requestRedraw)
-        return true;
-
-    if(_requestContinousUpdate)
-        return true;
-
-    return false;
-}
-
 // called from ViewerWidget paintGL() method
 void OSGRenderer::frame(double simulationTime)
 {
@@ -463,37 +390,7 @@ void OSGRenderer::frame(double simulationTime)
     _lastFrameStartTime.setStartTick();
     // make frame
 
-#if 1
     osgViewer::Viewer::frame(simulationTime);
-#else
-
-    if(_done) return;
-
-    // OSG_NOTICE<<std::endl<<"CompositeViewer::frame()"<<std::endl<<std::endl;
-
-    if(_firstFrame)
-    {
-        viewerInit();
-
-        if(!isRealized())
-        {
-            realize();
-        }
-
-        _firstFrame = false;
-    }
-
-    advance(simulationTime);
-
-    eventTraversal();
-    updateTraversal();
-    //    renderingTraversals();
-#endif
-}
-
-void OSGRenderer::requestRedraw()
-{
-    osgViewer::Viewer::requestRedraw();
 }
 
 void OSGRenderer::timerEvent(QTimerEvent* /*event*/)

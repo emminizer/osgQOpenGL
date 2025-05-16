@@ -80,16 +80,9 @@ public:
 
     void setupOSG(int windowWidth, int windowHeight, float windowScale);
 
-    // overrided from osgViewer::Viewer
-    virtual bool checkNeedToDoFrame() override;
-
     // overrided from osgViewer::ViewerBase
     virtual void frame(double simulationTime = USE_REFERENCE_TIME) override;
 
-    // overrided from osgViewer::Viewer
-    virtual void requestRedraw() override;
-    // overrided from osgViewer::Viewer
-    virtual bool checkEvents() override;
     void update();
 
 protected:
