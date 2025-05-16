@@ -124,3 +124,10 @@ void osgQOpenGLWindow::createRenderer()
     double pixelRatio = screen()->devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
 }
+
+void osgQOpenGLWindow::setTimerInterval(int intervalMs)
+{
+    _timerIntervalMs = intervalMs;
+    if (m_renderer)
+        m_renderer->setTimerInterval(_timerIntervalMs);
+}

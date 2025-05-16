@@ -221,3 +221,10 @@ void osgQOpenGLWidget::createRenderer()
                       qApp->screens().front();
     m_renderer->setupOSG(width(), height(), screen->devicePixelRatio());
 }
+
+void osgQOpenGLWidget::setTimerInterval(int intervalMs)
+{
+  _timerIntervalMs = intervalMs;
+  if (m_renderer)
+    m_renderer->setTimerInterval(_timerIntervalMs);
+}

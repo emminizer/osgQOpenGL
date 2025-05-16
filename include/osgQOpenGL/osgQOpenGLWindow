@@ -39,6 +39,7 @@ protected:
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
 	bool _isFirstFrame {true};
+    int _timerIntervalMs {10};
     friend class OSGRenderer;
 
     QWidget* _widget = nullptr;
@@ -46,6 +47,9 @@ protected:
 public:
     osgQOpenGLWindow(QWidget* parent = nullptr);
     virtual ~osgQOpenGLWindow();
+
+    //! Sets the timer interval for updating the graphics, in ms
+    void setTimerInterval(int intervalMs);
 
     /** Get osgViewer View */
     osgViewer::Viewer* getOsgViewer();

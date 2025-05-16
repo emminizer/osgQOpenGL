@@ -40,6 +40,7 @@ class OSGQOPENGL_EXPORT OSGRenderer : public QObject, public osgViewer::Viewer
     bool                                       m_continuousUpdate {true};
 
     int                                        _timerId{0};
+    int                                        _timerIntervalMs {10};
     osg::Timer                                 _lastFrameStartTime;
     bool                                       _applicationAboutToQuit {false};
     bool                                       _osgWantsToRenderFrame{true};
@@ -54,6 +55,9 @@ public:
     explicit OSGRenderer(osg::ArgumentParser* arguments, QObject* parent = nullptr);
 
     ~OSGRenderer() override;
+
+    //! Sets the timer interval for updating the graphics, in ms
+    void setTimerInterval(int intervalMs);
 
     bool continuousUpdate() const
     {

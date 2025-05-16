@@ -206,7 +206,7 @@ void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
     osgViewer::Viewer::Windows windows;
     getWindows(windows);
 
-    _timerId = startTimer(10, Qt::PreciseTimer);
+    _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
     _lastFrameStartTime.setStartTick(0);
 }
 
@@ -510,4 +510,16 @@ void OSGRenderer::timerEvent(QTimerEvent* /*event*/)
     {
         update();
     }
+}
+
+void OSGRenderer::setTimerInterval(int intervalMs)
+{
+    if (intervalMs == _timerIntervalMs)
+        return;
+    const bool wasRunning = (_timerId != 0);
+    if (wasRunning)
+        killTimer(_timerId);
+    _timerIntervalMs = intervalMs;
+    if (wasRunning)
+        _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
 }
