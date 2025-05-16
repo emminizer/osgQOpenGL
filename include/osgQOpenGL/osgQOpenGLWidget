@@ -41,6 +41,7 @@ protected:
     OpenThreads::ReadWriteMutex _osgMutex;
     osg::ArgumentParser* _arguments {nullptr};
 	bool _isFirstFrame {true};
+    int _timerIntervalMs {10};
 
     friend class OSGRenderer;
 
@@ -49,12 +50,15 @@ public:
     osgQOpenGLWidget(osg::ArgumentParser* arguments, QWidget* parent = nullptr);
     virtual ~osgQOpenGLWidget();
 
+    //! Sets the timer interval for updating the graphics, in ms
+    void setTimerInterval(int intervalMs);
+
     /** Get osgViewer View */
     osgViewer::Viewer* getOsgViewer();
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();
-    
+
     //! override this to change default size or aspect ratio 
     virtual QSize sizeHint() const override { return QSize(640,480); }
     
