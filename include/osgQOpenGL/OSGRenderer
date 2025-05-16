@@ -80,16 +80,16 @@ public:
     virtual bool checkNeedToDoFrame() override;
 
     // overrided from osgViewer::ViewerBase
-    void frame(double simulationTime = USE_REFERENCE_TIME) override;
+    virtual void frame(double simulationTime = USE_REFERENCE_TIME) override;
 
     // overrided from osgViewer::Viewer
-    void requestRedraw() override;
+    virtual void requestRedraw() override;
     // overrided from osgViewer::Viewer
-    bool checkEvents() override;
+    virtual bool checkEvents() override;
     void update();
 
 protected:
-    void timerEvent(QTimerEvent* event) override;
+    virtual void timerEvent(QTimerEvent* event) override;
 
     void setKeyboardModifiers(QInputEvent* event);
 
