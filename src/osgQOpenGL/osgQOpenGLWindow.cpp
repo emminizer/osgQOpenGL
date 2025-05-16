@@ -39,7 +39,7 @@ void osgQOpenGLWindow::initializeGL()
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
-    emit initialized();
+    Q_EMIT initialized();
 }
 
 void osgQOpenGLWindow::resizeGL(int w, int h)
