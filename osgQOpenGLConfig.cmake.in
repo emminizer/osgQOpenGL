@@ -18,7 +18,7 @@ if(NOT _OSGQOPENGL_ALREADY_DEFINED)
     # Replace the interface link libraries with those found by OSG, to allow this to be more easily relocatable.
     # Without this, absolute paths to OSG are stored in the target, making the output library non-relocatable
     # to other machines unless they have OSG in the exact same location.
-    set_target_properties(osg-qt::osgQOpenGL PROPERTIES INTERFACE_LINK_LIBRARIES "")
+    set_target_properties(osg-qt::osgQOpenGL PROPERTIES INTERFACE_LINK_LIBRARIES "Qt5::Widgets;Qt5::OpenGL")
     target_link_libraries(osg-qt::osgQOpenGL INTERFACE ${OPENSCENEGRAPH_LIBRARIES})
     target_include_directories(osg-qt::osgQOpenGL INTERFACE ${OPENSCENEGRAPH_INCLUDE_DIRS})
 endif()
