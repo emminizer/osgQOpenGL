@@ -4,9 +4,7 @@ endif()
 
 include(CMakeFindDependencyMacro)
 
-if(NOT TARGET Qt5::OpenGL)
-    find_dependency(Qt5 COMPONENTS Gui OpenGL REQUIRED)
-endif()
+find_dependency(Qt5 COMPONENTS Widgets OpenGL)
 # Instead of checking OPENSCENEGRAPH_LIBRARIES, check osgViewer and osgUtil specifically
 if(NOT DEFINED OSGUTIL_LIBRARIES OR NOT DEFINED OSGVIEWER_LIBRARIES OR NOT DEFINED OPENSCENEGRAPH_INCLUDE_DIRS)
     find_dependency(OpenSceneGraph COMPONENTS osgUtil osgViewer)
