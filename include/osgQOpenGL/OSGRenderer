@@ -61,6 +61,8 @@ public:
 
     //! Returns the graphics context for the current viewer, null if not yet configured
     osg::GraphicsContext* getGraphicsContext() const;
+    //! Retrieve the graphics window
+    osgViewer::GraphicsWindow* getGraphicsWindow() const;
 
     bool continuousUpdate() const
     {

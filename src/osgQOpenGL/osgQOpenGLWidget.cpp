@@ -21,11 +21,25 @@ osgQOpenGLWidget::~osgQOpenGLWidget()
 {
 }
 
-osgViewer::Viewer* osgQOpenGLWidget::getOsgViewer()
+osgViewer::Viewer* osgQOpenGLWidget::getOsgViewer() const
 {
     if (!m_renderer)
         return _viewer.get();
     return m_renderer->getViewer();
+}
+
+osg::GraphicsContext* osgQOpenGLWidget::getGraphicsContext() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsContext();
+}
+
+osgViewer::GraphicsWindow* osgQOpenGLWidget::getGraphicsWindow() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsWindow();
 }
 
 void osgQOpenGLWidget::setOsgViewer(osgViewer::Viewer* viewer)
@@ -61,11 +75,11 @@ void osgQOpenGLWidget::resizeGL(int w, int h)
 void osgQOpenGLWidget::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
-	if (_isFirstFrame) {
-		_isFirstFrame = false;
-		m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
-	}
-	m_renderer->renderFrame();
+    if (_isFirstFrame) {
+        _isFirstFrame = false;
+        m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+    }
+    m_renderer->renderFrame();
 }
 
 void osgQOpenGLWidget::keyPressEvent(QKeyEvent* event)
