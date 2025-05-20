@@ -23,8 +23,10 @@
 
 class OSGRenderer;
 
+namespace osg { class GraphicsContext; }
 namespace osgViewer
 {
+    class GraphicsWindow;
     class Viewer;
 }
 
@@ -52,16 +54,21 @@ public:
     void setTimerInterval(int intervalMs);
 
     /** Get osgViewer View */
-    osgViewer::Viewer* getOsgViewer();
+    osgViewer::Viewer* getOsgViewer() const;
+    /** Retrieve the graphics context */
+    osg::GraphicsContext* getGraphicsContext() const;
+    /** Retrieve the graphics window */
+    osgViewer::GraphicsWindow* getGraphicsWindow() const;
+
     /** Sets the osgViewer that will be used when creating the rendering context. Call at initialization only. */
     void setOsgViewer(osgViewer::Viewer* viewer);
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();
 
-    //! override this to change default size or aspect ratio 
+    //! override this to change default size or aspect ratio
     virtual QSize sizeHint() const override { return QSize(640,480); }
-    
+
 Q_SIGNALS:
     void initialized();
 

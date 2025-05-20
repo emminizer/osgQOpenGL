@@ -422,3 +422,8 @@ osg::GraphicsContext* OSGRenderer::getGraphicsContext() const
         return nullptr;
     return m_viewer->getCamera()->getGraphicsContext();
 }
+
+osgViewer::GraphicsWindow* OSGRenderer::getGraphicsWindow() const
+{
+    return m_osgWinEmb.get();
+}

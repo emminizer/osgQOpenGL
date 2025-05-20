@@ -23,11 +23,25 @@ osgQOpenGLWindow::~osgQOpenGLWindow()
 {
 }
 
-osgViewer::Viewer* osgQOpenGLWindow::getOsgViewer()
+osgViewer::Viewer* osgQOpenGLWindow::getOsgViewer() const
 {
     if (!m_renderer)
         return _viewer.get();
     return m_renderer->getViewer();
+}
+
+osg::GraphicsContext* osgQOpenGLWindow::getGraphicsContext() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsContext();
+}
+
+osgViewer::GraphicsWindow* osgQOpenGLWindow::getGraphicsWindow() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsWindow();
 }
 
 void osgQOpenGLWindow::setOsgViewer(osgViewer::Viewer* viewer)
