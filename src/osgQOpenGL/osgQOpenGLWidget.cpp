@@ -15,6 +15,7 @@
 osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
     : QOpenGLWidget(parent)
 {
+    setMouseTracking(true);
 }
 
 osgQOpenGLWidget::~osgQOpenGLWidget()
