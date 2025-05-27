@@ -17,6 +17,7 @@ osgQOpenGLWindow::osgQOpenGLWindow(QWidget* parent)
     : QOpenGLWindow(QOpenGLWindow::NoPartialUpdate, nullptr)
 {
     _widget = QWidget::createWindowContainer(this);
+    _widget->setMouseTracking(true);
 }
 
 osgQOpenGLWindow::~osgQOpenGLWindow()
