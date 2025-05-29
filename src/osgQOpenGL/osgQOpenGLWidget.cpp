@@ -61,6 +61,7 @@ void osgQOpenGLWidget::initializeGL()
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
+    getOsgViewer()->realize();
     Q_EMIT initialized();
 }
 
