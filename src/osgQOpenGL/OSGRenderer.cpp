@@ -180,23 +180,24 @@ void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
     // Create a Viewer as a backstop against the user not setting it manually
     if (!m_osgInitialized && !m_viewer.valid())
     {
-      m_ownedViewer = new osgViewer::Viewer;
-      m_viewer = m_ownedViewer.get();
+        m_ownedViewer = new osgViewer::Viewer;
+        m_viewer = m_ownedViewer.get();
     }
     m_osgInitialized = true;
     m_windowScale = windowScale;
     m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0,
-                                                        windowWidth * windowScale, windowHeight * windowScale);
+        windowWidth * windowScale, windowHeight * windowScale);
 
     // make sure the event queue has the correct window rectangle size and input range
     m_osgWinEmb->getEventQueue()->syncWindowRectangleWithGraphicsContext();
+
     std::vector<osg::Camera*> cameras;
-    m_viewer->getCameras(cameras);
+    m_viewer->getCameras(cameras, false);
     for (auto* camera : cameras)
     {
-      camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
-        windowHeight * windowScale));
-      camera->setGraphicsContext(m_osgWinEmb.get());
+        camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
+            windowHeight * windowScale));
+        camera->setGraphicsContext(m_osgWinEmb.get());
     }
 
     // disable key event (default is Escape key) that the viewer checks on each
