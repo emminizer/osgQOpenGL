@@ -28,7 +28,7 @@ namespace osg { class GraphicsContext; }
 namespace osgViewer
 {
     class GraphicsWindow;
-    class Viewer;
+    class ViewerBase;
 }
 
 class OSGQOPENGL_EXPORT osgQOpenGLWindow : public QOpenGLWindow,
@@ -43,7 +43,7 @@ protected:
     OpenThreads::ReadWriteMutex _osgMutex;
 	bool _isFirstFrame {true};
     int _timerIntervalMs {10};
-    osg::observer_ptr<osgViewer::Viewer> _viewer;
+    osg::observer_ptr<osgViewer::ViewerBase> _viewer;
     friend class OSGRenderer;
 
     QWidget* _widget = nullptr;
@@ -56,14 +56,14 @@ public:
     void setTimerInterval(int intervalMs);
 
     /** Get osgViewer View */
-    osgViewer::Viewer* getOsgViewer() const;
+    osgViewer::ViewerBase* getOsgViewer() const;
     /** Retrieve the graphics context */
     osg::GraphicsContext* getGraphicsContext() const;
     /** Retrieve the graphics window */
     osgViewer::GraphicsWindow* getGraphicsWindow() const;
 
     /** Sets the osgViewer that will be used when creating the rendering context. Call at initialization only. */
-    void setOsgViewer(osgViewer::Viewer* viewer);
+    void setOsgViewer(osgViewer::ViewerBase* viewer);
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();

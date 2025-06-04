@@ -33,7 +33,7 @@ class OSGQOPENGL_EXPORT OSGRenderer : public QObject
 {
     bool                                       m_osgInitialized {false};
     osg::ref_ptr<osgViewer::GraphicsWindow>    m_osgWinEmb;
-    osg::observer_ptr<osgViewer::Viewer>       m_viewer;
+    osg::observer_ptr<osgViewer::ViewerBase>   m_viewer;
     osg::ref_ptr<osgViewer::Viewer>            m_ownedViewer;
     float                                      m_windowScale {1.0f};
     bool                                       m_continuousUpdate {true};
@@ -55,9 +55,9 @@ public:
     void setTimerInterval(int intervalMs);
 
     //! Set the viewer used by the renderer; if not called by the time setup occurs, one is created
-    void setViewer(osgViewer::Viewer* viewer);
+    void setViewer(osgViewer::ViewerBase* viewer);
     //! Retrieve the viewer configured for renderer
-    osgViewer::Viewer* getViewer() const;
+    osgViewer::ViewerBase* getViewer() const;
 
     //! Returns the graphics context for the current viewer, null if not yet configured
     osg::GraphicsContext* getGraphicsContext() const;
