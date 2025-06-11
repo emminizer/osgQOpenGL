@@ -148,6 +148,7 @@ void osgQOpenGLWindow::createRenderer()
     m_renderer = new OSGRenderer(this);
     if (_viewer.valid())
         m_renderer->setViewer(_viewer.get());
+    m_renderer->setTimerInterval(_timerIntervalMs);
     double pixelRatio = screen()->devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
 }

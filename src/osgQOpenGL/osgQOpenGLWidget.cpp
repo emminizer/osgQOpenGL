@@ -147,6 +147,7 @@ void osgQOpenGLWidget::createRenderer()
     m_renderer = new OSGRenderer(this);
     if (_viewer.valid())
         m_renderer->setViewer(_viewer.get());
+    m_renderer->setTimerInterval(_timerIntervalMs);
     QScreen* screen = windowHandle()
                       && windowHandle()->screen() ? windowHandle()->screen() :
                       qApp->screens().front();
@@ -155,7 +156,7 @@ void osgQOpenGLWidget::createRenderer()
 
 void osgQOpenGLWidget::setTimerInterval(int intervalMs)
 {
-  _timerIntervalMs = intervalMs;
-  if (m_renderer)
-    m_renderer->setTimerInterval(_timerIntervalMs);
+    _timerIntervalMs = intervalMs;
+    if (m_renderer)
+        m_renderer->setTimerInterval(_timerIntervalMs);
 }
