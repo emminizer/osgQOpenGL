@@ -16,6 +16,8 @@ osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
     : QOpenGLWidget(parent)
 {
     setMouseTracking(true);
+    // Focus policy required in order to process OSG keypresses
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 osgQOpenGLWidget::~osgQOpenGLWidget()
