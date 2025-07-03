@@ -80,6 +80,8 @@ void osgQOpenGLWindow::paintGL()
     if (_isFirstFrame) {
         _isFirstFrame = false;
         m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+
+        Q_EMIT aboutToRenderFirstFrame();
     }
     m_renderer->renderFrame();
 }
