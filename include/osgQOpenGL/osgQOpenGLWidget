@@ -71,6 +71,7 @@ public:
 
 Q_SIGNALS:
     void initialized();
+    void aboutToRenderFirstFrame();
 
 protected:
 
