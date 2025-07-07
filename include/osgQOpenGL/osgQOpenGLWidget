@@ -8,6 +8,7 @@
 #   include <QtGui/qopenglext.h>
 #endif
 
+#include <functional>
 #include <osgQOpenGL/Export>
 #include <OpenThreads/ReadWriteMutex>
 #include <osg/observer_ptr>
@@ -43,6 +44,7 @@ protected:
 	bool _isFirstFrame {true};
     int _timerIntervalMs {10};
     osg::observer_ptr<osgViewer::ViewerBase> _viewer;
+    std::function<void(double simulationTime)> _renderFunction;
 
     friend class OSGRenderer;
 
@@ -68,6 +70,9 @@ public:
 
     //! override this to change default size or aspect ratio
     virtual QSize sizeHint() const override { return QSize(640,480); }
+
+    /** Set an overriding render function. By default this calls the viewer's frame() */
+    void setRenderFunction(const std::function<void(double simulationTime)>& renderFunc);
 
 Q_SIGNALS:
     void initialized();
