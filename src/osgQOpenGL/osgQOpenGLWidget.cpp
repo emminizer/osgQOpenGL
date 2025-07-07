@@ -156,6 +156,7 @@ void osgQOpenGLWidget::createRenderer()
                       && windowHandle()->screen() ? windowHandle()->screen() :
                       qApp->screens().front();
     m_renderer->setupOSG(width(), height(), screen->devicePixelRatio());
+    m_renderer->setRenderFunction(_renderFunction);
 }
 
 void osgQOpenGLWidget::setTimerInterval(int intervalMs)
@@ -163,4 +164,11 @@ void osgQOpenGLWidget::setTimerInterval(int intervalMs)
     _timerIntervalMs = intervalMs;
     if (m_renderer)
         m_renderer->setTimerInterval(_timerIntervalMs);
+}
+
+void osgQOpenGLWidget::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
+    if (m_renderer)
+        m_renderer->setRenderFunction(_renderFunction);
 }

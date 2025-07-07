@@ -153,6 +153,7 @@ void osgQOpenGLWindow::createRenderer()
     m_renderer->setTimerInterval(_timerIntervalMs);
     double pixelRatio = screen()->devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
+    m_renderer->setRenderFunction(_renderFunction);
 }
 
 void osgQOpenGLWindow::setTimerInterval(int intervalMs)
@@ -160,4 +161,11 @@ void osgQOpenGLWindow::setTimerInterval(int intervalMs)
     _timerIntervalMs = intervalMs;
     if (m_renderer)
         m_renderer->setTimerInterval(_timerIntervalMs);
+}
+
+void osgQOpenGLWindow::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
+    if (m_renderer)
+        m_renderer->setRenderFunction(_renderFunction);
 }

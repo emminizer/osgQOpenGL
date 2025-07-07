@@ -17,6 +17,7 @@
 #ifndef OSGRENDERER_H
 #define OSGRENDERER_H
 
+#include <functional>
 #include <osgQOpenGL/Export>
 
 #include <QObject>
@@ -42,6 +43,7 @@ class OSGQOPENGL_EXPORT OSGRenderer : public QObject
     int                                        _timerIntervalMs {10};
     osg::Timer                                 _lastFrameStartTime;
     bool                                       _osgWantsToRenderFrame{true};
+    std::function<void(double simulationTime)> _renderFunction;
 
     Q_OBJECT
 
@@ -89,6 +91,9 @@ public:
     void renderFrame(double simulationTime = USE_REFERENCE_TIME);
 
     void update();
+
+    /** Set an overriding render function. By default this calls the viewer's frame() */
+    void setRenderFunction(const std::function<void(double simulationTime)>& renderFunc);
 
 protected:
     virtual void timerEvent(QTimerEvent* event) override;

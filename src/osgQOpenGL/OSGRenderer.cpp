@@ -371,6 +371,12 @@ void OSGRenderer::wheelEvent(QWheelEvent* event)
 // called from ViewerWidget paintGL() method
 void OSGRenderer::renderFrame(double simulationTime)
 {
+    if (_renderFunction)
+    {
+        _renderFunction(simulationTime);
+        return;
+    }
+
     // limit the frame rate
     if(m_viewer->getRunMaxFrameRate() > 0.0)
     {
@@ -429,4 +435,9 @@ osg::GraphicsContext* OSGRenderer::getGraphicsContext() const
 osgViewer::GraphicsWindow* OSGRenderer::getGraphicsWindow() const
 {
     return m_osgWinEmb.get();
+}
+
+void OSGRenderer::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
 }

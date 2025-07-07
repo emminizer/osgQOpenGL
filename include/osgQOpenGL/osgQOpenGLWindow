@@ -8,6 +8,7 @@
 #   include <QtGui/qopenglext.h>
 #endif
 
+#include <functional>
 #include <osgQOpenGL/Export>
 #include <OpenThreads/ReadWriteMutex>
 #include <osg/observer_ptr>
@@ -45,6 +46,7 @@ protected:
     int _timerIntervalMs {10};
     osg::observer_ptr<osgViewer::ViewerBase> _viewer;
     friend class OSGRenderer;
+    std::function<void(double simulationTime)> _renderFunction;
 
     QWidget* _widget = nullptr;
 
@@ -72,6 +74,9 @@ public:
     {
         return _widget;
     }
+
+    /** Set an overriding render function. By default this calls the viewer's frame() */
+    void setRenderFunction(const std::function<void(double simulationTime)>& renderFunc);
 
 Q_SIGNALS:
     void initialized();
