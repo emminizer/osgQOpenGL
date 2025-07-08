@@ -79,9 +79,12 @@ void osgQOpenGLWidget::resizeGL(int w, int h)
 void osgQOpenGLWidget::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
+
+    // Must constantly set the default FBO ID, because Qt can change it on resize or other events
+    m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+
     if (_isFirstFrame) {
         _isFirstFrame = false;
-        m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
 
         Q_EMIT aboutToRenderFirstFrame();
     }
