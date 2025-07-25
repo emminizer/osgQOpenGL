@@ -23,6 +23,7 @@ IF ( Qt5Widgets_FOUND )
         ${HEADER_PATH}/RenderStageEx
         ${HEADER_PATH}/StateEx
         ${CMAKE_CURRENT_BINARY_DIR}/Export
+        ${OSGQOPENGL_VERSION_HEADER}
     )
 
 
@@ -34,6 +35,7 @@ IF ( Qt5Widgets_FOUND )
         OSGRenderer.cpp
         RenderStageEx.cpp
         StateEx.cpp
+        Version.cpp
         ${SOURCES_H_MOC}
         ${OPENSCENEGRAPH_VERSIONINFO_RC}
     )
