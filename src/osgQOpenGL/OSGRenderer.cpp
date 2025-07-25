@@ -19,9 +19,6 @@
 #include <osgQOpenGL/osgQOpenGLWindow>
 #include <osgQOpenGL/osgQOpenGLWidget>
 
-//#include <osgQOpenGL/CullVisitorEx>
-//#include <osgQOpenGL/GraphicsWindowEx>
-
 #include <QApplication>
 #include <QScreen>
 #include <QOpenGLContext>
@@ -117,31 +114,26 @@ namespace
 } // namespace
 
 OSGRenderer::OSGRenderer(QObject* parent)
-    : QObject(parent), osgViewer::Viewer()
+    : QObject(parent)
 {
-    //    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
-    //                     [this]()
-    //    {
-    //        _applicationAboutToQuit = true;
-    //        killTimer(_timerId);
-    //        _timerId = 0;
-    //    });
-}
-
-OSGRenderer::OSGRenderer(osg::ArgumentParser* arguments, QObject* parent)
-    : QObject(parent), osgViewer::Viewer(*arguments)
-{
-    //    QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
-    //                     [this]()
-    //    {
-    //        _applicationAboutToQuit = true;
-    //        killTimer(_timerId);
-    //        _timerId = 0;
-    //    });
 }
 
 OSGRenderer::~OSGRenderer()
 {
+}
+
+void OSGRenderer::setViewer(osgViewer::ViewerBase* viewer)
+{
+  // Calling this more than once, or after initialization, is an error
+  Q_ASSERT(!m_osgInitialized);
+  if (m_osgInitialized)
+    return;
+  m_viewer = viewer;
+}
+
+osgViewer::ViewerBase* OSGRenderer::getViewer() const
+{
+  return m_viewer.get();
 }
 
 void OSGRenderer::update()
@@ -185,28 +177,41 @@ void OSGRenderer::resize(int windowWidth, int windowHeight, float windowScale)
 
 void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
 {
+    // Create a Viewer as a backstop against the user not setting it manually
+    if (!m_osgInitialized && !m_viewer.valid())
+    {
+        m_ownedViewer = new osgViewer::Viewer;
+        m_viewer = m_ownedViewer.get();
+    }
     m_osgInitialized = true;
     m_windowScale = windowScale;
     m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0,
-                                                        windowWidth * windowScale, windowHeight * windowScale);
-    //m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0, windowWidth * windowScale, windowHeight * windowScale);
+        windowWidth * windowScale, windowHeight * windowScale);
+
     // make sure the event queue has the correct window rectangle size and input range
     m_osgWinEmb->getEventQueue()->syncWindowRectangleWithGraphicsContext();
-    _camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
-                                           windowHeight * windowScale));
-    _camera->setGraphicsContext(m_osgWinEmb.get());
+
+    std::vector<osg::Camera*> cameras;
+    m_viewer->getCameras(cameras, false);
+    for (auto* camera : cameras)
+    {
+        camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
+            windowHeight * windowScale));
+        camera->setGraphicsContext(m_osgWinEmb.get());
+    }
+
     // disable key event (default is Escape key) that the viewer checks on each
     // frame to see
     // if the viewer's done flag should be set to signal end of viewers main
     // loop.
-    setKeyEventSetsDone(0);
-    setReleaseContextAtEndOfFrameHint(false);
-    setThreadingModel(osgViewer::Viewer::SingleThreaded);
+    m_viewer->setKeyEventSetsDone(0);
+    m_viewer->setReleaseContextAtEndOfFrameHint(false);
+    m_viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
     osgViewer::Viewer::Windows windows;
-    getWindows(windows);
+    m_viewer->getWindows(windows);
 
-    _timerId = startTimer(10, Qt::PreciseTimer);
+    _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
     _lastFrameStartTime.setStartTick(0);
 }
 
@@ -363,94 +368,27 @@ void OSGRenderer::wheelEvent(QWheelEvent* event)
          osgGA::GUIEventAdapter::SCROLL_RIGHT));
 }
 
-bool OSGRenderer::checkEvents()
-{
-    // check events from any attached sources
-    for(Devices::iterator eitr = _eventSources.begin();
-        eitr != _eventSources.end();
-        ++eitr)
-    {
-        osgGA::Device* es = eitr->get();
-
-        if(es->getCapabilities() & osgGA::Device::RECEIVE_EVENTS)
-        {
-            if(es->checkEvents())
-                return true;
-        }
-
-    }
-
-    // get events from all windows attached to Viewer.
-    Windows windows;
-    getWindows(windows);
-
-    for(Windows::iterator witr = windows.begin();
-        witr != windows.end();
-        ++witr)
-    {
-        if((*witr)->checkEvents())
-            return true;
-    }
-
-    return false;
-}
-
-bool OSGRenderer::checkNeedToDoFrame()
-{
-    // check if any event handler has prompted a redraw
-    if(_requestRedraw)
-        return true;
-
-    if(_requestContinousUpdate)
-        return true;
-
-    // check if the view needs to update the scene graph
-    // this check if camera has update callback and if scene requires to update scene graph
-    if(requiresUpdateSceneGraph())
-        return true;
-
-    // check if the database pager needs to update the scene
-    if(getDatabasePager()->requiresUpdateSceneGraph())
-        return true;
-
-    // check if the image pager needs to update the scene
-    if(getImagePager()->requiresUpdateSceneGraph())
-        return true;
-
-
-    // check if the scene needs to be redrawn
-    if(requiresRedraw())
-        return true;
-
-    // check if events are available and need processing
-    if(checkEvents())
-        return true;
-
-    // and check again if any event handler has prompted a redraw
-    if(_requestRedraw)
-        return true;
-
-    if(_requestContinousUpdate)
-        return true;
-
-    return false;
-}
-
 // called from ViewerWidget paintGL() method
-void OSGRenderer::frame(double simulationTime)
+void OSGRenderer::renderFrame(double simulationTime)
 {
+    if (_renderFunction)
+    {
+        _renderFunction(simulationTime);
+        return;
+    }
+
     // limit the frame rate
-    if(getRunMaxFrameRate() > 0.0)
+    if(m_viewer->getRunMaxFrameRate() > 0.0)
     {
         double dt = _lastFrameStartTime.time_s();
-        double minFrameTime = 1.0 / getRunMaxFrameRate();
+        double minFrameTime = 1.0 / m_viewer->getRunMaxFrameRate();
 
         if(dt < minFrameTime)
             QThread::usleep(static_cast<unsigned int>(1000000.0 * (minFrameTime - dt)));
     }
 
     // avoid excessive CPU loading when no frame is required in ON_DEMAND mode
-    if(getRunFrameScheme() == osgViewer::ViewerBase::ON_DEMAND)
+    if(m_viewer->getRunFrameScheme() == osgViewer::ViewerBase::ON_DEMAND)
     {
         double dt = _lastFrameStartTime.time_s();
 
@@ -463,51 +401,43 @@ void OSGRenderer::frame(double simulationTime)
     _lastFrameStartTime.setStartTick();
     // make frame
 
-#if 1
-    osgViewer::Viewer::frame(simulationTime);
-#else
-
-    if(_done) return;
-
-    // OSG_NOTICE<<std::endl<<"CompositeViewer::frame()"<<std::endl<<std::endl;
-
-    if(_firstFrame)
-    {
-        viewerInit();
-
-        if(!isRealized())
-        {
-            realize();
-        }
-
-        _firstFrame = false;
-    }
-
-    advance(simulationTime);
-
-    eventTraversal();
-    updateTraversal();
-    //    renderingTraversals();
-#endif
-}
-
-void OSGRenderer::requestRedraw()
-{
-    osgViewer::Viewer::requestRedraw();
+    m_viewer->frame(simulationTime);
 }
 
 void OSGRenderer::timerEvent(QTimerEvent* /*event*/)
 {
-    // application is about to quit, just return
-    if(_applicationAboutToQuit)
-    {
-        return;
-    }
-
     // ask ViewerWidget to update 3D view
-    if(getRunFrameScheme() != osgViewer::ViewerBase::ON_DEMAND ||
-       checkNeedToDoFrame())
+    if(m_viewer->getRunFrameScheme() != osgViewer::ViewerBase::ON_DEMAND ||
+       m_viewer->checkNeedToDoFrame())
     {
         update();
     }
+}
+
+void OSGRenderer::setTimerInterval(int intervalMs)
+{
+    if (intervalMs == _timerIntervalMs)
+        return;
+    const bool wasRunning = (_timerId != 0);
+    if (wasRunning)
+        killTimer(_timerId);
+    _timerIntervalMs = intervalMs;
+    if (wasRunning)
+        _timerId = startTimer(_timerIntervalMs, Qt::PreciseTimer);
+}
+
+osg::GraphicsContext* OSGRenderer::getGraphicsContext() const
+{
+    // The embedded window is a graphics context
+    return m_osgWinEmb.get();
+}
+
+osgViewer::GraphicsWindow* OSGRenderer::getGraphicsWindow() const
+{
+    return m_osgWinEmb.get();
+}
+
+void OSGRenderer::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
 }

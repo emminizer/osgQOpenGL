@@ -1,8 +1,13 @@
+SET(OSGQOPENGL_MAJOR_VERSION 4)
+SET(OSGQOPENGL_MINOR_VERSION 0)
+SET(OSGQOPENGL_PATCH_VERSION 0)
+SET(OSGQOPENGL_SOVERSION 147)
+SET(OSGQOPENGL_VERSION ${OSGQOPENGL_MAJOR_VERSION}.${OSGQOPENGL_MINOR_VERSION}.${OSGQOPENGL_PATCH_VERSION})
+
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.15 FATAL_ERROR)
 
 IF(APPLE)
   # Get OSX version in MAJOR.MINOR format
@@ -90,10 +95,13 @@ IF(APPLE)
   ENDIF()
 ENDIF()
 
-PROJECT(osgQt)
+PROJECT(osgQt VERSION ${OSGQOPENGL_VERSION} LANGUAGES CXX)
 
+INCLUDE(GNUInstallDirs)
 FIND_PACKAGE(OpenSceneGraph 3.6.0 REQUIRED osgDB osgGA osgUtil osgText osgViewer osgWidget)
-SET(OPENSCENEGRAPH_SOVERSION 145)
+# Set the OPENSCENEGRAPH_SOVERSION and OPENSCENEGRAPH_VERSION to leverage existing macros
+SET(OPENSCENEGRAPH_SOVERSION ${OSGQOPENGL_SOVERSION})
+SET(OPENSCENEGRAPH_VERSION ${OSGQOPENGL_VERSION})
 
 SET(OSG_PLUGINS osgPlugins-${OPENSCENEGRAPH_VERSION})
 
@@ -391,6 +399,13 @@ ENDIF(WIN32 AND NOT ANDROID)
 #luigi#ENDIF(UNIX)
 ########################################################################################################
 
+
+################################################################################
+# Set Version header file
+
+SET(OSGQOPENGL_VERSION_HEADER "${PROJECT_BINARY_DIR}/include/osgQOpenGL/Version")
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/osgQOpenGL/Version.in"
+               "${OSGQOPENGL_VERSION_HEADER}")
 
 ################################################################################
 # Set Version Info resource file
@@ -924,5 +939,32 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-#
+install(TARGETS osgQOpenGL
+    EXPORT osgQOpenGL-targets
+)
 
+install(EXPORT osgQOpenGL-targets
+    FILE osgQOpenGLTargets.cmake
+    NAMESPACE osgQt::
+    DESTINATION "share/cmake/osgQOpenGL"
+)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    "osgQOpenGLConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
+    INSTALL_DESTINATION "share/cmake/osgQOpenGL"
+)
+
+write_basic_package_version_file(
+    "osgQOpenGLConfigVersion.cmake"
+    VERSION ${OSGQOPENGL_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfigVersion.cmake"
+    DESTINATION "share/cmake/osgQOpenGL"
+)

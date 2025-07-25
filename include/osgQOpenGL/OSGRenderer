@@ -17,6 +17,7 @@
 #ifndef OSGRENDERER_H
 #define OSGRENDERER_H
 
+#include <functional>
 #include <osgQOpenGL/Export>
 
 #include <QObject>
@@ -27,33 +28,43 @@ class QInputEvent;
 class QKeyEvent;
 class QMouseEvent;
 class QWheelEvent;
-namespace eveBIM
-{
-    class ViewerWidget;
-}
+namespace osg { class GraphicsContext; }
 
-class OSGQOPENGL_EXPORT OSGRenderer : public QObject, public osgViewer::Viewer
+class OSGQOPENGL_EXPORT OSGRenderer : public QObject
 {
     bool                                       m_osgInitialized {false};
     osg::ref_ptr<osgViewer::GraphicsWindow>    m_osgWinEmb;
+    osg::observer_ptr<osgViewer::ViewerBase>   m_viewer;
+    osg::ref_ptr<osgViewer::Viewer>            m_ownedViewer;
     float                                      m_windowScale {1.0f};
     bool                                       m_continuousUpdate {true};
 
     int                                        _timerId{0};
+    int                                        _timerIntervalMs {10};
     osg::Timer                                 _lastFrameStartTime;
-    bool                                       _applicationAboutToQuit {false};
     bool                                       _osgWantsToRenderFrame{true};
+    std::function<void(double simulationTime)> _renderFunction;
 
     Q_OBJECT
-
-    friend class eveBIM::ViewerWidget;
 
 public:
 
     explicit OSGRenderer(QObject* parent = nullptr);
-    explicit OSGRenderer(osg::ArgumentParser* arguments, QObject* parent = nullptr);
 
     ~OSGRenderer() override;
+
+    //! Sets the timer interval for updating the graphics, in ms
+    void setTimerInterval(int intervalMs);
+
+    //! Set the viewer used by the renderer; if not called by the time setup occurs, one is created
+    void setViewer(osgViewer::ViewerBase* viewer);
+    //! Retrieve the viewer configured for renderer
+    osgViewer::ViewerBase* getViewer() const;
+
+    //! Returns the graphics context for the current viewer, null if not yet configured
+    osg::GraphicsContext* getGraphicsContext() const;
+    //! Retrieve the graphics window
+    osgViewer::GraphicsWindow* getGraphicsWindow() const;
 
     bool continuousUpdate() const
     {
@@ -76,20 +87,16 @@ public:
 
     void setupOSG(int windowWidth, int windowHeight, float windowScale);
 
-    // overrided from osgViewer::Viewer
-    virtual bool checkNeedToDoFrame() override;
+    // Calls osgViewer::ViewerBase::frame(), with main thread sleeps as needed
+    void renderFrame(double simulationTime = USE_REFERENCE_TIME);
 
-    // overrided from osgViewer::ViewerBase
-    void frame(double simulationTime = USE_REFERENCE_TIME) override;
-
-    // overrided from osgViewer::Viewer
-    void requestRedraw() override;
-    // overrided from osgViewer::Viewer
-    bool checkEvents() override;
     void update();
 
+    /** Set an overriding render function. By default this calls the viewer's frame() */
+    void setRenderFunction(const std::function<void(double simulationTime)>& renderFunc);
+
 protected:
-    void timerEvent(QTimerEvent* event) override;
+    virtual void timerEvent(QTimerEvent* event) override;
 
     void setKeyboardModifiers(QInputEvent* event);
 

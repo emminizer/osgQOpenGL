@@ -1,0 +1,4 @@
+osgQOpenGL provides CMake targets:
+
+    find_package(osgQOpenGL REQUIRED)
+    target_link_libraries(main PRIVATE osgQt::osgQOpenGL)

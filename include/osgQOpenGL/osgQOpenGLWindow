@@ -8,8 +8,10 @@
 #   include <QtGui/qopenglext.h>
 #endif
 
+#include <functional>
 #include <osgQOpenGL/Export>
 #include <OpenThreads/ReadWriteMutex>
+#include <osg/observer_ptr>
 
 #ifdef WIN32
 //#define __gl_h_
@@ -23,9 +25,11 @@
 class OSGRenderer;
 class QWidget;
 
+namespace osg { class GraphicsContext; }
 namespace osgViewer
 {
-    class Viewer;
+    class GraphicsWindow;
+    class ViewerBase;
 }
 
 class OSGQOPENGL_EXPORT osgQOpenGLWindow : public QOpenGLWindow,
@@ -34,11 +38,15 @@ class OSGQOPENGL_EXPORT osgQOpenGLWindow : public QOpenGLWindow,
     Q_OBJECT
 
 protected:
+    // Owned and deleted through Qt parent
     OSGRenderer* m_renderer {nullptr};
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
 	bool _isFirstFrame {true};
+    int _timerIntervalMs {10};
+    osg::observer_ptr<osgViewer::ViewerBase> _viewer;
     friend class OSGRenderer;
+    std::function<void(double simulationTime)> _renderFunction;
 
     QWidget* _widget = nullptr;
 
@@ -46,8 +54,18 @@ public:
     osgQOpenGLWindow(QWidget* parent = nullptr);
     virtual ~osgQOpenGLWindow();
 
+    //! Sets the timer interval for updating the graphics, in ms
+    void setTimerInterval(int intervalMs);
+
     /** Get osgViewer View */
-    virtual osgViewer::Viewer* getOsgViewer();
+    osgViewer::ViewerBase* getOsgViewer() const;
+    /** Retrieve the graphics context */
+    osg::GraphicsContext* getGraphicsContext() const;
+    /** Retrieve the graphics window */
+    osgViewer::GraphicsWindow* getGraphicsWindow() const;
+
+    /** Sets the osgViewer that will be used when creating the rendering context. Call at initialization only. */
+    void setOsgViewer(osgViewer::ViewerBase* viewer);
 
     //! get mutex
     virtual OpenThreads::ReadWriteMutex* mutex();
@@ -57,29 +75,33 @@ public:
         return _widget;
     }
 
-signals:
+    /** Set an overriding render function. By default this calls the viewer's frame() */
+    void setRenderFunction(const std::function<void(double simulationTime)>& renderFunc);
+
+Q_SIGNALS:
     void initialized();
+    void aboutToRenderFirstFrame();
 
 protected:
 
     //! call createRender. If overloaded, this method must send initialized signal at end
-    void initializeGL() override;
+    virtual void initializeGL() override;
 
-    void resizeGL(int w, int h) override;
+    virtual void resizeGL(int w, int h) override;
 
     //! lock scene graph and call osgViewer::frame()
-    void paintGL() override;
+    virtual void paintGL() override;
 
     //! called before creating renderer
     virtual void setDefaultDisplaySettings();
 
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseDoubleClickEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void wheelEvent(QWheelEvent* event) override;
+    virtual void keyPressEvent(QKeyEvent* event) override;
+    virtual void keyReleaseEvent(QKeyEvent* event) override;
+    virtual void mousePressEvent(QMouseEvent* event) override;
+    virtual void mouseReleaseEvent(QMouseEvent* event) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent* event) override;
+    virtual void mouseMoveEvent(QMouseEvent* event) override;
+    virtual void wheelEvent(QWheelEvent* event) override;
 
     void createRenderer();
 };

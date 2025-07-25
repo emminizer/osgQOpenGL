@@ -15,23 +15,41 @@
 osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
     : QOpenGLWidget(parent)
 {
-}
-
-osgQOpenGLWidget::osgQOpenGLWidget(osg::ArgumentParser* arguments,
-                                   QWidget* parent) :
-    QOpenGLWidget(parent),
-    _arguments(arguments)
-{
-
+    setMouseTracking(true);
+    // Focus policy required in order to process OSG keypresses
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 osgQOpenGLWidget::~osgQOpenGLWidget()
 {
 }
 
-osgViewer::Viewer* osgQOpenGLWidget::getOsgViewer()
+osgViewer::ViewerBase* osgQOpenGLWidget::getOsgViewer() const
 {
-    return m_renderer;
+    if (!m_renderer)
+        return _viewer.get();
+    return m_renderer->getViewer();
+}
+
+osg::GraphicsContext* osgQOpenGLWidget::getGraphicsContext() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsContext();
+}
+
+osgViewer::GraphicsWindow* osgQOpenGLWidget::getGraphicsWindow() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsWindow();
+}
+
+void osgQOpenGLWidget::setOsgViewer(osgViewer::ViewerBase* viewer)
+{
+    _viewer = viewer;
+    if (m_renderer)
+        m_renderer->setViewer(_viewer.get());
 }
 
 OpenThreads::ReadWriteMutex* osgQOpenGLWidget::mutex()
@@ -45,7 +63,8 @@ void osgQOpenGLWidget::initializeGL()
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
-    emit initialized();
+    getOsgViewer()->realize();
+    Q_EMIT initialized();
 }
 
 void osgQOpenGLWidget::resizeGL(int w, int h)
@@ -60,102 +79,23 @@ void osgQOpenGLWidget::resizeGL(int w, int h)
 void osgQOpenGLWidget::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
-	if (_isFirstFrame) {
-		_isFirstFrame = false;
-		m_renderer->getCamera()->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
-	}
-	m_renderer->frame();
+
+    // Must constantly set the default FBO ID, because Qt can change it on resize or other events
+    m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+
+    if (_isFirstFrame) {
+        _isFirstFrame = false;
+
+        Q_EMIT aboutToRenderFirstFrame();
+    }
+    m_renderer->renderFrame();
 }
 
 void osgQOpenGLWidget::keyPressEvent(QKeyEvent* event)
 {
     Q_ASSERT(m_renderer);
-
-    if(event->key() == Qt::Key_F)
-    {
-        static QSize g;
-        static QMargins sMargins;
-
-        if(parent() && parent()->isWidgetType())
-        {
-            QMainWindow* _mainwindow = dynamic_cast<QMainWindow*>(parent());
-
-            if(_mainwindow)
-            {
-                g = size();
-
-                if(layout())
-                    sMargins = layout()->contentsMargins();
-
-                bool ok = true;
-
-                // select screen
-                if(qApp->screens().size() > 1)
-                {
-                    QMap<QString, QScreen*> screens;
-                    int screenNumber = 0;
-
-                    for(QScreen* screen : qApp->screens())
-                    {
-                        QString name = screen->name();
-
-                        if(name.isEmpty())
-                        {
-                            name = tr("Screen %1").arg(screenNumber);
-                        }
-
-                        name += " (" + QString::number(screen->size().width()) + "x" + QString::number(
-                                    screen->size().height()) + ")";
-                        screens[name] = screen;
-                        ++screenNumber;
-                    }
-
-                    QString selected = QInputDialog::getItem(this,
-                                                             tr("Choose fullscreen target screen"), tr("Screen"), screens.keys(), 0, false,
-                                                             &ok);
-
-                    if(ok && !selected.isEmpty())
-                    {
-                        context()->setScreen(screens[selected]);
-                        move(screens[selected]->geometry().x(), screens[selected]->geometry().y());
-                        resize(screens[selected]->geometry().width(),
-                               screens[selected]->geometry().height());
-                    }
-                }
-
-                if(ok)
-                {
-                    // in fullscreen mode, a thiner (1px) border around
-                    // viewer widget
-                    if(layout())
-                        layout()->setContentsMargins(1, 1, 1, 1);
-
-                    setParent(0);
-                    showFullScreen();
-                }
-            }
-        }
-        else
-        {
-            showNormal();
-            setMinimumSize(g);
-            QMainWindow* _mainwindow = dynamic_cast<QMainWindow*>(parent());
-            if(_mainwindow){
-                _mainwindow->setCentralWidget(this);
-            }
-
-            if(layout())
-                layout()->setContentsMargins(sMargins);
-
-            qApp->processEvents();
-            setMinimumSize(QSize(1, 1));
-        }
-    }
-    else // not 'F' key
-    {
-        // forward event to renderer
-        m_renderer->keyPressEvent(event);
-    }
+    // forward event to renderer
+    m_renderer->keyPressEvent(event);
 }
 
 void osgQOpenGLWidget::keyReleaseEvent(QKeyEvent* event)
@@ -211,13 +151,27 @@ void osgQOpenGLWidget::createRenderer()
 {
     // call this before creating a View...
     setDefaultDisplaySettings();
-	if (!_arguments) {
-		m_renderer = new OSGRenderer(this);
-	} else {
-		m_renderer = new OSGRenderer(_arguments, this);
-	}
-	QScreen* screen = windowHandle()
+    m_renderer = new OSGRenderer(this);
+    if (_viewer.valid())
+        m_renderer->setViewer(_viewer.get());
+    m_renderer->setTimerInterval(_timerIntervalMs);
+    QScreen* screen = windowHandle()
                       && windowHandle()->screen() ? windowHandle()->screen() :
                       qApp->screens().front();
     m_renderer->setupOSG(width(), height(), screen->devicePixelRatio());
+    m_renderer->setRenderFunction(_renderFunction);
+}
+
+void osgQOpenGLWidget::setTimerInterval(int intervalMs)
+{
+    _timerIntervalMs = intervalMs;
+    if (m_renderer)
+        m_renderer->setTimerInterval(_timerIntervalMs);
+}
+
+void osgQOpenGLWidget::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
+    if (m_renderer)
+        m_renderer->setRenderFunction(_renderFunction);
 }

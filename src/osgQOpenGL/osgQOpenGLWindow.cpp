@@ -17,15 +17,39 @@ osgQOpenGLWindow::osgQOpenGLWindow(QWidget* parent)
     : QOpenGLWindow(QOpenGLWindow::NoPartialUpdate, nullptr)
 {
     _widget = QWidget::createWindowContainer(this);
+    _widget->setMouseTracking(true);
 }
 
 osgQOpenGLWindow::~osgQOpenGLWindow()
 {
 }
 
-osgViewer::Viewer* osgQOpenGLWindow::getOsgViewer()
+osgViewer::ViewerBase* osgQOpenGLWindow::getOsgViewer() const
 {
-    return m_renderer;
+    if (!m_renderer)
+        return _viewer.get();
+    return m_renderer->getViewer();
+}
+
+osg::GraphicsContext* osgQOpenGLWindow::getGraphicsContext() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsContext();
+}
+
+osgViewer::GraphicsWindow* osgQOpenGLWindow::getGraphicsWindow() const
+{
+    if (!m_renderer)
+        return nullptr;
+    return m_renderer->getGraphicsWindow();
+}
+
+void osgQOpenGLWindow::setOsgViewer(osgViewer::ViewerBase* viewer)
+{
+    _viewer = viewer;
+    if (m_renderer)
+        m_renderer->setViewer(_viewer.get());
 }
 
 OpenThreads::ReadWriteMutex* osgQOpenGLWindow::mutex()
@@ -39,7 +63,8 @@ void osgQOpenGLWindow::initializeGL()
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
-    emit initialized();
+    getOsgViewer()->realize();
+    Q_EMIT initialized();
 }
 
 void osgQOpenGLWindow::resizeGL(int w, int h)
@@ -52,11 +77,16 @@ void osgQOpenGLWindow::resizeGL(int w, int h)
 void osgQOpenGLWindow::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
-	if (_isFirstFrame) {
-		_isFirstFrame = false;
-		m_renderer->getCamera()->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
-	}
-    m_renderer->frame();
+
+    // Must constantly set the default FBO ID, because Qt can change it on resize or other events
+    m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
+
+    if (_isFirstFrame) {
+        _isFirstFrame = false;
+
+        Q_EMIT aboutToRenderFirstFrame();
+    }
+    m_renderer->renderFrame();
 }
 
 void osgQOpenGLWindow::keyPressEvent(QKeyEvent* event)
@@ -121,6 +151,24 @@ void osgQOpenGLWindow::createRenderer()
     setDefaultDisplaySettings();
 
     m_renderer = new OSGRenderer(this);
+    if (_viewer.valid())
+        m_renderer->setViewer(_viewer.get());
+    m_renderer->setTimerInterval(_timerIntervalMs);
     double pixelRatio = screen()->devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
+    m_renderer->setRenderFunction(_renderFunction);
+}
+
+void osgQOpenGLWindow::setTimerInterval(int intervalMs)
+{
+    _timerIntervalMs = intervalMs;
+    if (m_renderer)
+        m_renderer->setTimerInterval(_timerIntervalMs);
+}
+
+void osgQOpenGLWindow::setRenderFunction(const std::function<void(double simulationTime)>& renderFunc)
+{
+    _renderFunction = renderFunc;
+    if (m_renderer)
+        m_renderer->setRenderFunction(_renderFunction);
 }
