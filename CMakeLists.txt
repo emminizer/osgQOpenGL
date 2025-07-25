@@ -92,6 +92,7 @@ ENDIF()
 
 PROJECT(osgQt)
 
+INCLUDE(GNUInstallDirs)
 FIND_PACKAGE(OpenSceneGraph 3.6.0 REQUIRED osgDB osgGA osgUtil osgText osgViewer osgWidget)
 SET(OPENSCENEGRAPH_SOVERSION 145)
 
@@ -924,37 +925,32 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-#
-
-add_library(osg-qt ALIAS osgQOpenGL)
-add_library(osgqt ALIAS osgQOpenGL)
-
 install(TARGETS osgQOpenGL
     EXPORT osgQOpenGL-targets
 )
 
 install(EXPORT osgQOpenGL-targets
-    FILE osg-qtTargets.cmake  
-    NAMESPACE osg-qt::
-    DESTINATION "share/cmake/osg-qt"
+    FILE osgQOpenGLTargets.cmake
+    NAMESPACE osgQt::
+    DESTINATION "share/cmake/osgQOpenGL"
 )
 
-include(CMakePackageConfigHelpers)  # 引入模块 [3,5](@ref)
+include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
     "osgQOpenGLConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/osg-qtConfig.cmake"
-    INSTALL_DESTINATION "share/cmake/osg-qt"
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
+    INSTALL_DESTINATION "share/cmake/osgQOpenGL"
 )
 
 write_basic_package_version_file(
-    "osg-qtConfigVersion.cmake"
-    VERSION 1.0.0
+    "osgQOpenGLConfigVersion.cmake"
+    VERSION ${OPENSCENEGRAPH_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/osg-qtConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/osg-qtConfigVersion.cmake"
-    DESTINATION "share/cmake/osg-qt"
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfigVersion.cmake"
+    DESTINATION "share/cmake/osgQOpenGL"
 )
