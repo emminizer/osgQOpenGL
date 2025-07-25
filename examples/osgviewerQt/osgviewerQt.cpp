@@ -91,8 +91,8 @@ int main( int argc, char** argv )
     osgQOpenGLWidget widget;
     widget.setOsgViewer(&viewer);
 
-    QObject::connect(&widget, &osgQOpenGLWidget::initialized,   [  &arguments,
-                                                                   &widget ]
+    QObject::connect(&widget, &osgQOpenGLWidget::initialized,
+      [  &arguments, &widget, &viewer ]
     {
         unsigned int helpType = 0;
 
@@ -134,7 +134,7 @@ int main( int argc, char** argv )
 
             if(dev.valid())
             {
-                widget.getOsgViewer()->addDevice(dev);
+                viewer.addDevice(dev);
             }
         }
 
@@ -172,32 +172,32 @@ int main( int argc, char** argv )
                 }
             }
 
-            widget.getOsgViewer()->setCameraManipulator(keyswitchManipulator.get());
+            viewer.setCameraManipulator(keyswitchManipulator.get());
         }
 
         // add the state manipulator
-        widget.getOsgViewer()->addEventHandler(new osgGA::StateSetManipulator(widget.getOsgViewer()->getCamera()->getOrCreateStateSet()));
+        viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
 
         // add the thread model handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::ThreadingHandler);
+        viewer.addEventHandler(new osgViewer::ThreadingHandler);
 
         // add the window size toggle handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::WindowSizeHandler);
+        viewer.addEventHandler(new osgViewer::WindowSizeHandler);
 
         // add the stats handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::StatsHandler);
+        viewer.addEventHandler(new osgViewer::StatsHandler);
 
         // add the help handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::HelpHandler(arguments.getApplicationUsage()));
+        viewer.addEventHandler(new osgViewer::HelpHandler(arguments.getApplicationUsage()));
 
         // add the record camera path handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::RecordCameraPathHandler);
+        viewer.addEventHandler(new osgViewer::RecordCameraPathHandler);
 
         // add the LOD Scale handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::LODScaleHandler);
+        viewer.addEventHandler(new osgViewer::LODScaleHandler);
 
         // add the screen capture handler
-        widget.getOsgViewer()->addEventHandler(new osgViewer::ScreenCaptureHandler);
+        viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
 
         // load the data
         osg::ref_ptr<osg::Node> loadedModel = osgDB::readRefNodeFiles(arguments);
@@ -223,9 +223,9 @@ int main( int argc, char** argv )
         osgUtil::Optimizer optimizer;
         optimizer.optimize(loadedModel);
 
-        widget.getOsgViewer()->setSceneData(loadedModel);
+        viewer.setSceneData(loadedModel);
 
-        //        widget.getOsgViewer()->realize();
+        //        viewer.realize();
 
         return 0;
     });

@@ -122,7 +122,7 @@ OSGRenderer::~OSGRenderer()
 {
 }
 
-void OSGRenderer::setViewer(osgViewer::Viewer* viewer)
+void OSGRenderer::setViewer(osgViewer::ViewerBase* viewer)
 {
   // Calling this more than once, or after initialization, is an error
   Q_ASSERT(!m_osgInitialized);
@@ -131,7 +131,7 @@ void OSGRenderer::setViewer(osgViewer::Viewer* viewer)
   m_viewer = viewer;
 }
 
-osgViewer::Viewer* OSGRenderer::getViewer() const
+osgViewer::ViewerBase* OSGRenderer::getViewer() const
 {
   return m_viewer.get();
 }
@@ -180,20 +180,26 @@ void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
     // Create a Viewer as a backstop against the user not setting it manually
     if (!m_osgInitialized && !m_viewer.valid())
     {
-      m_ownedViewer = new osgViewer::Viewer;
-      m_viewer = m_ownedViewer.get();
+        m_ownedViewer = new osgViewer::Viewer;
+        m_viewer = m_ownedViewer.get();
     }
     m_osgInitialized = true;
     m_windowScale = windowScale;
     m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0,
-                                                        windowWidth * windowScale, windowHeight * windowScale);
-    //m_osgWinEmb = new osgViewer::GraphicsWindowEmbedded(0, 0, windowWidth * windowScale, windowHeight * windowScale);
+        windowWidth * windowScale, windowHeight * windowScale);
+
     // make sure the event queue has the correct window rectangle size and input range
     m_osgWinEmb->getEventQueue()->syncWindowRectangleWithGraphicsContext();
-    auto* camera = m_viewer->getCamera();
-    camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
-                                           windowHeight * windowScale));
-    camera->setGraphicsContext(m_osgWinEmb.get());
+
+    std::vector<osg::Camera*> cameras;
+    m_viewer->getCameras(cameras, false);
+    for (auto* camera : cameras)
+    {
+        camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
+            windowHeight * windowScale));
+        camera->setGraphicsContext(m_osgWinEmb.get());
+    }
+
     // disable key event (default is Escape key) that the viewer checks on each
     // frame to see
     // if the viewer's done flag should be set to signal end of viewers main
@@ -396,9 +402,7 @@ void OSGRenderer::timerEvent(QTimerEvent* /*event*/)
 {
     // ask ViewerWidget to update 3D view
     if(m_viewer->getRunFrameScheme() != osgViewer::ViewerBase::ON_DEMAND ||
-       m_viewer->checkNeedToDoFrame() ||
-       m_viewer->getDatabasePager()->requiresUpdateSceneGraph() ||
-       m_viewer->getImagePager()->requiresUpdateSceneGraph())
+       m_viewer->checkNeedToDoFrame())
     {
         update();
     }
@@ -418,9 +422,8 @@ void OSGRenderer::setTimerInterval(int intervalMs)
 
 osg::GraphicsContext* OSGRenderer::getGraphicsContext() const
 {
-    if (!m_viewer.get() || !m_viewer->getCamera())
-        return nullptr;
-    return m_viewer->getCamera()->getGraphicsContext();
+    // The embedded window is a graphics context
+    return m_osgWinEmb.get();
 }
 
 osgViewer::GraphicsWindow* OSGRenderer::getGraphicsWindow() const
