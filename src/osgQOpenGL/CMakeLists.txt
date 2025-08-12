@@ -18,23 +18,15 @@ IF ( Qt5Widgets_FOUND )
 
     SET(TARGET_H
         ${SOURCE_H}
-        ${HEADER_PATH}/CullVisitorEx
-        ${HEADER_PATH}/GraphicsWindowEx
-        ${HEADER_PATH}/RenderStageEx
-        ${HEADER_PATH}/StateEx
         ${CMAKE_CURRENT_BINARY_DIR}/Export
         ${OSGQOPENGL_VERSION_HEADER}
     )
 
 
     SET(TARGET_SRC
-        CullVisitorEx.cpp
-        GraphicsWindowEx.cpp
         osgQOpenGLWidget.cpp
         osgQOpenGLWindow.cpp
         OSGRenderer.cpp
-        RenderStageEx.cpp
-        StateEx.cpp
         Version.cpp
         ${SOURCES_H_MOC}
         ${OPENSCENEGRAPH_VERSIONINFO_RC}
