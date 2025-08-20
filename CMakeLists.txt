@@ -764,102 +764,6 @@ IF(APPLE)
 ENDIF()
 
 
-# For Doxygen
-INCLUDE(${CMAKE_ROOT}/Modules/Documentation.cmake OPTIONAL)
-OPTION(BUILD_DOCUMENTATION "Build OpenSceneGraph reference documentation using doxygen (use: make doc_openscenegraph doc_openthreads)" OFF)
-MARK_AS_ADVANCED(CLEAR BUILD_DOCUMENTATION)
-# To build the documention, you will have to enable it
-# and then do the equivalent of "make doc_openscenegraph doc_openthreads".
-IF(BUILD_DOCUMENTATION)
-
-    OPTION(BUILD_REF_DOCS_SEARCHENGINE "Enable doxygen's search engine (requires that documentation to be installed on a php enabled web server)" OFF)
-    IF(BUILD_REF_DOCS_SEARCHENGINE)
-        SET(SEARCHENGINE YES)
-    ELSE()
-        SET(SEARCHENGINE NO)
-    ENDIF()
-
-    OPTION(BUILD_REF_DOCS_TAGFILE "Generate a tag file named osg.tag on the documentation web server" OFF)
-    IF(BUILD_REF_DOCS_TAGFILE)
-        SET(GENERATE_TAGFILE "${OpenSceneGraph_BINARY_DIR}/doc/OpenSceneGraphReferenceDocs/osg.tag")
-    ELSE()
-        SET(GENERATE_TAGFILE "")
-    ENDIF()
-
-    IF(DOT)
-        SET(HAVE_DOT YES)
-    ELSE()
-        SET(HAVE_DOT NO)
-    ENDIF()
-
-    # If html help generation was requested. DOCUMENTATION_HTML_HELP is defined by Documentation.cmake
-    SET(GENERATE_HTMLHELP "NO")
-    IF(DOCUMENTATION_HTML_HELP)
-        # on windows Documentation.cmake finds the html help workshop if it exists. On u*ix we might have it with wine but no way to point it out
-        IF(NOT WIN32)
-            SET(HTML_HELP_COMPILER "" CACHE FILEPATH "Enter location of the HTML help compiler to let doxygen compile html")
-            MARK_AS_ADVANCED(HTML_HELP_COMPILER)
-        ENDIF()
-        # this var sets a proper value in .doxygen files when configuring them below
-        SET(GENERATE_HTMLHELP "YES")
-    endif()
-
-    # This processes our doxyfile.cmake and substitutes paths to generate
-    # a final Doxyfile
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/doc/Doxyfiles/doxyfile.cmake
-        ${PROJECT_BINARY_DIR}/doc/openscenegraph.doxyfile
-    )
-    # copy the osg logo to documentations target folder
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PlatformSpecifics/Windows/icons/src/osg32-32.png
-        ${PROJECT_BINARY_DIR}/doc/OpenSceneGraphReferenceDocs/osg32-32.png COPYONLY
-    )
-    #INSTALL(FILES ${PROJECT_BINARY_DIR}/doc/${PROJECT_NAME}ReferenceDocs-${OPENSCENEGRAPH_VERSION}.chm DESTINATION doc OPTIONAL COMPONENT openscenegraph-doc)
-    INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/doc/OpenSceneGraphReferenceDocs DESTINATION doc COMPONENT openscenegraph-doc)
-
-    # now set up openthreads documentation generation
-    IF(BUILD_REF_DOCS_TAGFILE)
-        SET(GENERATE_TAGFILE "${OpenSceneGraph_BINARY_DIR}/doc/OpenThreadsReferenceDocs/ot.tag")
-    ENDIF()
-
-    # copy the osg logo to documentations target folder
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PlatformSpecifics/Windows/icons/src/osg32-32.png
-        ${PROJECT_BINARY_DIR}/doc/OpenThreadsReferenceDocs/osg32-32.png COPYONLY
-    )
-    #INSTALL(FILES ${PROJECT_BINARY_DIR}/doc/${PROJECT_NAME}ReferenceDocs-${OPENSCENEGRAPH_VERSION}.chm DESTINATION doc OPTIONAL COMPONENT openscenegraph-doc)
-    INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/doc/OpenThreadsReferenceDocs DESTINATION doc COMPONENT openthreads-doc)
-
-    # Process our other doxyfiles but don't create targets for these
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/doc/Doxyfiles/all_Doxyfile
-        ${PROJECT_BINARY_DIR}/doc/all_Doxyfile)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/doc/Doxyfiles/auto_Doxyfile
-        ${PROJECT_BINARY_DIR}/doc/auto_Doxyfile)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/doc/Doxyfiles/core_Doxyfile
-        ${PROJECT_BINARY_DIR}/doc/core_Doxyfile)
-
-    # This creates a new target to build documentation.
-    # It runs ${DOXYGEN} which is the full path and executable to
-    # Doxygen on your system, set by the FindDoxygen.cmake module
-    # (called by FindDocumentation.cmake).
-    # It runs the final generated Doxyfile against it.
-    # The DOT_PATH is substituted into the Doxyfile.
-    ADD_CUSTOM_TARGET(doc_openscenegraph ${DOXYGEN}
-        ${PROJECT_BINARY_DIR}/doc/openscenegraph.doxyfile
-    )
-    SET_TARGET_PROPERTIES(doc_openscenegraph PROPERTIES FOLDER "Documentation")
-
-    ADD_CUSTOM_TARGET(doc_openthreads ${DOXYGEN}
-        ${PROJECT_BINARY_DIR}/doc/openthreads.doxyfile
-    )
-    SET_TARGET_PROPERTIES(doc_openthreads PROPERTIES FOLDER "Documentation")
-ENDIF(BUILD_DOCUMENTATION)
-
-OPTION(BUILD_DASHBOARD_REPORTS "Set to ON to activate reporting of OpenSceneGraph builds here http://cdash.openscenegraph.org/index.php?project=OpenSceneGraph" OFF)
-IF(BUILD_DASHBOARD_REPORTS)
-# The following are required to uses Dart and the Cdash dashboard
-# viewable here : http://cdash.openscenegraph.org/index.php?project=OpenSceneGraph
-    INCLUDE(Dart)
-ENDIF()
-
 # present the packaging option only if we have the cpack command defined (effectively >= 2.6.0)
 IF(CMAKE_CPACK_COMMAND)
     OPTION(BUILD_OSG_PACKAGES "Set to ON to generate CPack configuration files and packaging targets" OFF)
@@ -867,16 +771,6 @@ IF(CMAKE_CPACK_COMMAND)
       INCLUDE(OsgCPack)
     ENDIF()
 ENDIF()
-
-# Generate pkg-config configuration files
-    SET ( PKGCONFIG_MODULE_NAME osgQt )
-
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/packaging/pkgconfig/openscenegraph-osgQt.pc.in
-  ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph-${PKGCONFIG_MODULE_NAME}.pc
-  @ONLY
-  )
-INSTALL(FILES ${PROJECT_BINARY_DIR}/packaging/pkgconfig/openscenegraph-${PKGCONFIG_MODULE_NAME}.pc DESTINATION lib${LIB_POSTFIX}/pkgconfig COMPONENT libopenscenegraph-dev)
-
 
 # Run this as late as possible so users can easier spot the message
 IF (NOT DEFINED REQUIRES_LIBPATH_MESSAGE AND ${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
@@ -938,33 +832,3 @@ CONFIGURE_FILE(
   IMMEDIATE @ONLY)
 ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
-
-install(TARGETS osgQOpenGL
-    EXPORT osgQOpenGL-targets
-)
-
-install(EXPORT osgQOpenGL-targets
-    FILE osgQOpenGLTargets.cmake
-    NAMESPACE osgQt::
-    DESTINATION "share/cmake/osgQOpenGL"
-)
-
-include(CMakePackageConfigHelpers)
-
-configure_package_config_file(
-    "osgQOpenGLConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
-    INSTALL_DESTINATION "share/cmake/osgQOpenGL"
-)
-
-write_basic_package_version_file(
-    "osgQOpenGLConfigVersion.cmake"
-    VERSION ${OSGQOPENGL_VERSION}
-    COMPATIBILITY SameMajorVersion
-)
-
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/osgQOpenGLConfigVersion.cmake"
-    DESTINATION "share/cmake/osgQOpenGL"
-)
