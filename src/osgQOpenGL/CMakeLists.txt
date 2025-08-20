@@ -43,7 +43,14 @@ set(TARGET_SRC
     ${OPENSCENEGRAPH_VERSIONINFO_RC}
 )
 
-set(TARGET_LIBRARIES Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL)
+if(QT_VERSION_MAJOR EQUAL 5)
+    set(TARGET_LIBRARIES Qt5::Widgets Qt5::OpenGL)
+    set(_QT_COMPONENTS "Widgets OpenGL")
+else()
+    set(TARGET_LIBRARIES Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets)
+    set(_QT_COMPONENTS "Widgets OpenGL OpenGLWidgets")
+endif()
+
 set(TARGET_LIBRARIES_VARS
     OSG_LIBRARY
     OSGUTIL_LIBRARY
@@ -67,7 +74,7 @@ install(TARGETS ${LIB_NAME}
 )
 
 install(EXPORT ${LIB_NAME}-targets
-    FILE osgQOpenGLTargets.cmake
+    FILE ${LIB_NAME}Targets.cmake
     NAMESPACE osgQt::
     DESTINATION "share/cmake/${LIB_NAME}"
 )
