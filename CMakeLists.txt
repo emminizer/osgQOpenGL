@@ -95,7 +95,7 @@ IF(APPLE)
   ENDIF()
 ENDIF()
 
-PROJECT(osgQt VERSION ${OSGQOPENGL_VERSION} LANGUAGES CXX)
+PROJECT(osgQOpenGL VERSION ${OSGQOPENGL_VERSION} LANGUAGES CXX)
 
 INCLUDE(GNUInstallDirs)
 FIND_PACKAGE(OpenSceneGraph 3.6.0 REQUIRED osgDB osgGA osgUtil osgText osgViewer osgWidget)
@@ -438,7 +438,14 @@ INCLUDE(OsgMacroUtils)
 # via cmake -DDESIRED_QT_VERSION=5
 # QUIET option disables messages if the package cannot be found.
 
-FIND_PACKAGE(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
+# Try to find Qt6, then Qt5, and if both fail give an error message
+find_package(Qt6 COMPONENTS Widgets OpenGL OpenGLWidgets QUIET)
+if(NOT Qt6_FOUND)
+    find_package(Qt5 COMPONENTS Widgets OpenGL QUIET)
+    if(NOT Qt5_FOUND)
+        message(FATAL_ERROR "Could not find either Qt6 or Qt5. This project requires Qt.")
+    endif()
+endif()
 
 
 ################################################################################
