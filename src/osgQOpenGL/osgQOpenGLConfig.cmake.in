@@ -4,7 +4,7 @@ endif()
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(Qt5 COMPONENTS @_QT_COMPONENTS@)
+find_dependency(Qt@QT_VERSION_MAJOR@ COMPONENTS @_QT_COMPONENTS@)
 # Instead of checking OPENSCENEGRAPH_LIBRARIES, check osgViewer and osgUtil specifically
 if(NOT DEFINED OSGUTIL_LIBRARIES OR NOT DEFINED OSGVIEWER_LIBRARIES OR NOT DEFINED OPENSCENEGRAPH_INCLUDE_DIRS)
     find_dependency(OpenSceneGraph COMPONENTS osgUtil osgViewer)
