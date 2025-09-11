@@ -21,15 +21,22 @@ set(CMAKE_INCLUDE_CURRENT_DIR yes)
 set(HEADER_PATH ../../include/osgQOpenGL)
 
 set(SOURCE_H
+    ${HEADER_PATH}/osgQOpenGLWidget.h
+    ${HEADER_PATH}/osgQOpenGLWindow.h
+    ${HEADER_PATH}/OSGRenderer.h
+)
+set(SOURCE_EXTENSIONLESS
     ${HEADER_PATH}/osgQOpenGLWidget
     ${HEADER_PATH}/osgQOpenGLWindow
     ${HEADER_PATH}/OSGRenderer
+    ${HEADER_PATH}/Version
 )
 
 qt_wrap_cpp(SOURCES_H_MOC ${SOURCE_H})
 
 set(TARGET_H
     ${SOURCE_H}
+    ${SOURCE_EXTENSIONLESS}
     ${CMAKE_CURRENT_BINARY_DIR}/Export
     ${OSGQOPENGL_VERSION_HEADER}
 )

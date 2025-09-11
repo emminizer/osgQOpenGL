@@ -1,5 +1,5 @@
 SET(OSGQOPENGL_MAJOR_VERSION 4)
-SET(OSGQOPENGL_MINOR_VERSION 0)
+SET(OSGQOPENGL_MINOR_VERSION 1)
 SET(OSGQOPENGL_PATCH_VERSION 0)
 SET(OSGQOPENGL_SOVERSION 147)
 SET(OSGQOPENGL_VERSION ${OSGQOPENGL_MAJOR_VERSION}.${OSGQOPENGL_MINOR_VERSION}.${OSGQOPENGL_PATCH_VERSION})
@@ -403,8 +403,8 @@ ENDIF(WIN32 AND NOT ANDROID)
 ################################################################################
 # Set Version header file
 
-SET(OSGQOPENGL_VERSION_HEADER "${PROJECT_BINARY_DIR}/include/osgQOpenGL/Version")
-CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/osgQOpenGL/Version.in"
+SET(OSGQOPENGL_VERSION_HEADER "${PROJECT_BINARY_DIR}/include/osgQOpenGL/Version.h")
+CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/src/osgQOpenGL/Version.h.in"
                "${OSGQOPENGL_VERSION_HEADER}")
 
 ################################################################################
