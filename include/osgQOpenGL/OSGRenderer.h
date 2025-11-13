@@ -36,7 +36,7 @@ class OSGQOPENGL_EXPORT OSGRenderer : public QObject
     osg::ref_ptr<osgViewer::GraphicsWindow>    m_osgWinEmb;
     osg::observer_ptr<osgViewer::ViewerBase>   m_viewer;
     osg::ref_ptr<osgViewer::Viewer>            m_ownedViewer;
-    float                                      m_windowScale {1.0f};
+    double                                     m_windowScale {1.};
     bool                                       m_continuousUpdate {true};
 
     int                                        _timerId{0};
@@ -83,9 +83,9 @@ public:
     virtual void mouseMoveEvent(QMouseEvent* event);
     virtual void wheelEvent(QWheelEvent* event);
 
-    virtual void resize(int windowWidth, int windowHeight, float windowScale);
+    virtual void resize(int windowWidth, int windowHeight, double windowScale);
 
-    void setupOSG(int windowWidth, int windowHeight, float windowScale);
+    void setupOSG(int windowWidth, int windowHeight, double windowScale);
 
     // Calls osgViewer::ViewerBase::frame(), with main thread sleeps as needed
     void renderFrame(double simulationTime = USE_REFERENCE_TIME);

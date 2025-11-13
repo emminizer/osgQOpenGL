@@ -124,23 +124,23 @@ OSGRenderer::~OSGRenderer()
 
 void OSGRenderer::setViewer(osgViewer::ViewerBase* viewer)
 {
-  // Calling this more than once, or after initialization, is an error
-  Q_ASSERT(!m_osgInitialized);
-  if (m_osgInitialized)
-    return;
-  m_viewer = viewer;
+    // Calling this more than once, or after initialization, is an error
+    Q_ASSERT(!m_osgInitialized);
+    if (m_osgInitialized)
+        return;
+    m_viewer = viewer;
 }
 
 osgViewer::ViewerBase* OSGRenderer::getViewer() const
 {
-  return m_viewer.get();
+    return m_viewer.get();
 }
 
 void OSGRenderer::update()
 {
     osgQOpenGLWindow* osgWidgetRendered = dynamic_cast<osgQOpenGLWindow*>(parent());
 
-    if(osgWidgetRendered != nullptr)
+    if (osgWidgetRendered != nullptr)
     {
         osgWidgetRendered->_osgWantsToRenderFrame = true;
         osgWidgetRendered->update();
@@ -154,15 +154,12 @@ void OSGRenderer::update()
     }
 }
 
-void OSGRenderer::resize(int windowWidth, int windowHeight, float windowScale)
+void OSGRenderer::resize(int windowWidth, int windowHeight, double windowScale)
 {
     if(!m_osgInitialized)
         return;
 
     m_windowScale = windowScale;
-
-    /*  _camera->setViewport(new osg::Viewport(0, 0, windowWidth * windowScale,
-                                           windowHeight * windowScale));*/
 
     m_osgWinEmb->resized(0, 0,
                          windowWidth * windowScale,
@@ -175,7 +172,7 @@ void OSGRenderer::resize(int windowWidth, int windowHeight, float windowScale)
 }
 
 
-void OSGRenderer::setupOSG(int windowWidth, int windowHeight, float windowScale)
+void OSGRenderer::setupOSG(int windowWidth, int windowHeight, double windowScale)
 {
     // Create a Viewer as a backstop against the user not setting it manually
     if (!m_osgInitialized && !m_viewer.valid())
@@ -234,7 +231,7 @@ void OSGRenderer::setKeyboardModifiers(QInputEvent* event)
 void OSGRenderer::keyPressEvent(QKeyEvent* event)
 {
     setKeyboardModifiers(event);
-    int value = s_QtKeyboardMap.remapKey(event);
+    const int value = s_QtKeyboardMap.remapKey(event);
     m_osgWinEmb->getEventQueue()->keyPress(value);
 }
 
@@ -247,7 +244,7 @@ void OSGRenderer::keyReleaseEvent(QKeyEvent* event)
     else
     {
         setKeyboardModifiers(event);
-        int value = s_QtKeyboardMap.remapKey(event);
+        const int value = s_QtKeyboardMap.remapKey(event);
         m_osgWinEmb->getEventQueue()->keyRelease(value);
     }
 }

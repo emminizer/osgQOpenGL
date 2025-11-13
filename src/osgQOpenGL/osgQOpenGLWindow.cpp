@@ -4,12 +4,8 @@
 #include <osgViewer/Viewer>
 #include <osg/GL>
 
-#include <QApplication>
 #include <QKeyEvent>
-#include <QInputDialog>
-#include <QLayout>
-#include <QMainWindow>
-#include <QScreen>
+#include <QWidget>
 #include <QWindow>
 
 
@@ -70,7 +66,7 @@ void osgQOpenGLWindow::initializeGL()
 void osgQOpenGLWindow::resizeGL(int w, int h)
 {
     Q_ASSERT(m_renderer);
-    double pixelRatio = screen()->devicePixelRatio();
+    const double pixelRatio = devicePixelRatio();
     m_renderer->resize(w, h, pixelRatio);
 }
 
@@ -154,7 +150,7 @@ void osgQOpenGLWindow::createRenderer()
     if (_viewer.valid())
         m_renderer->setViewer(_viewer.get());
     m_renderer->setTimerInterval(_timerIntervalMs);
-    double pixelRatio = screen()->devicePixelRatio();
+    const double pixelRatio = devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
     m_renderer->setRenderFunction(_renderFunction);
 }

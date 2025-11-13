@@ -4,12 +4,7 @@
 #include <osgViewer/Viewer>
 #include <osg/GL>
 
-#include <QApplication>
 #include <QKeyEvent>
-#include <QInputDialog>
-#include <QLayout>
-#include <QMainWindow>
-#include <QScreen>
 #include <QWindow>
 
 osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
@@ -70,10 +65,9 @@ void osgQOpenGLWidget::initializeGL()
 void osgQOpenGLWidget::resizeGL(int w, int h)
 {
     Q_ASSERT(m_renderer);
-    QScreen* screen = windowHandle()
-                      && windowHandle()->screen() ? windowHandle()->screen() :
-                      qApp->screens().front();
-    m_renderer->resize(w, h, screen->devicePixelRatio());
+
+    const double pixelRatio = window() ? window()->devicePixelRatio() : 1.0;
+    m_renderer->resize(w, h, pixelRatio);
 }
 
 void osgQOpenGLWidget::paintGL()
@@ -155,10 +149,8 @@ void osgQOpenGLWidget::createRenderer()
     if (_viewer.valid())
         m_renderer->setViewer(_viewer.get());
     m_renderer->setTimerInterval(_timerIntervalMs);
-    QScreen* screen = windowHandle()
-                      && windowHandle()->screen() ? windowHandle()->screen() :
-                      qApp->screens().front();
-    m_renderer->setupOSG(width(), height(), screen->devicePixelRatio());
+    const double pixelRatio = window() ? window()->devicePixelRatio() : 1.0;
+    m_renderer->setupOSG(width(), height(), pixelRatio);
     m_renderer->setRenderFunction(_renderFunction);
 }
 

@@ -41,7 +41,7 @@ protected:
     OSGRenderer* m_renderer {nullptr};
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
-	bool _isFirstFrame {true};
+    bool _isFirstFrame {true};
     int _timerIntervalMs {10};
     osg::observer_ptr<osgViewer::ViewerBase> _viewer;
     std::function<void(double simulationTime)> _renderFunction;
