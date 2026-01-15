@@ -9,7 +9,7 @@ endif()
 
 include(GenerateExportHeader)
 
-option(OSGQOPENGL_APPEND_QT_VERSION "Append the Qt major version to the library name (e.g., mylib-qt6)" ON)
+option(OSGQOPENGL_APPEND_QT_VERSION "Append the Qt major version to the library name (e.g., mylib-qt6)" OFF)
 set(LIB_NAME osgQOpenGL)
 if(OSGQOPENGL_APPEND_QT_VERSION)
     set(LIB_NAME ${LIB_NAME}-qt${QT_VERSION_MAJOR})
