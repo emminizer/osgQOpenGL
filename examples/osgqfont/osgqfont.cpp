@@ -1,4 +1,4 @@
-/* OpenSceneGraph example, osgtext.
+/* OpenSceneGraph example, osgqfont.
 *
 *  Permission is hereby granted, free of charge, to any person obtaining a copy
 *  of this software and associated documentation files (the "Software"), to deal
@@ -17,11 +17,9 @@
 */
 
 #include <QApplication>
-#include <QGridLayout>
-#include <QWidget>
+#include <QSurfaceFormat>
 
-#include <osgQt/GraphicsWindowQt>
-#include <osgQt/QFontImplementation>
+#include <osgQOpenGL/osgQOpenGLWidget>
 
 #include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
@@ -29,7 +27,7 @@
 
 #include <osgGA/StateSetManipulator>
 #include <osgGA/TrackballManipulator>
-#include <osgViewer/CompositeViewer>
+#include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
 
 #include <osg/Geode>
@@ -43,10 +41,10 @@
 
 osg::Group* createHUDText()
 {
-
     osg::Group* rootNode = new osg::Group;
 
-    osgText::Font* font = new osgText::Font(new osgQt::QFontImplementation(QFont("Arial")));
+    // Use default OSG font instead of QFontImplementation
+    osgText::Font* font = osgText::Font::getDefaultFont();
 
     osg::Geode* geode  = new osg::Geode;
     rootNode->addChild(geode);
@@ -129,7 +127,7 @@ osg::Group* createHUDText()
         // use text that uses 10 by 10 texels as a target resolution for fonts.
         text->setFontResolution(10,10); // blocky but small texture memory usage
 
-        text->setText("text->setFontResolution(10,10); // blocky but small texture memory usage");
+        text->setText("text->setFontResolution(10,10); // blocky");
         geode->addDrawable(text);
     }
 
@@ -142,9 +140,9 @@ osg::Group* createHUDText()
         text->setPosition(cursor);
 
         // use text that uses 20 by 20 texels as a target resolution for fonts.
-        text->setFontResolution(20,20); // smoother but higher texture memory usage (but still quite low).
+        text->setFontResolution(20,20); // smoother but higher texture memory usage
 
-        text->setText("text->setFontResolution(20,20); // smoother but higher texture memory usage (but still quite low).");
+        text->setText("text->setFontResolution(20,20); // smoother");
         geode->addDrawable(text);
     }
 
@@ -157,9 +155,9 @@ osg::Group* createHUDText()
         text->setPosition(cursor);
 
         // use text that uses 40 by 40 texels as a target resolution for fonts.
-        text->setFontResolution(40,40); // even smoother but again higher texture memory usage.
+        text->setFontResolution(40,40); // even smoother
 
-        text->setText("text->setFontResolution(40,40); // even smoother but again higher texture memory usage.");
+        text->setText("text->setFontResolution(40,40); // smoothest");
         geode->addDrawable(text);
     }
 
@@ -281,103 +279,6 @@ osg::Group* createHUDText()
 
     rootNode->addChild(sequence);
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Examples of how to set up different fonts...
-//
-
-    cursor.x() = margin*2.0f;
-    cursor.y() = margin*2.0f;
-
-    osg::Vec4 fontColor(1.0f,0.5f,0.0f,1.0f);
-    float fontCharacterSize = 20.0f;
-    float spacing = 40.0f;
-
-    {
-        osgText::Text* text = new osgText::Text;
-        text->setColor(fontColor);
-        text->setPosition(cursor);
-        text->setCharacterSize(fontCharacterSize);
-
-        text->setFont(0);
-        text->setText("text->setFont(0); // inbuilt font.");
-        geode->addDrawable(text);
-
-        cursor.x() = text->getBoundingBox().xMax() + spacing ;
-    }
-
-    {
-        osgText::Font* arial = new osgText::Font(new osgQt::QFontImplementation(QFont("Arial")));
-
-        osgText::Text* text = new osgText::Text;
-        text->setColor(fontColor);
-        text->setPosition(cursor);
-        text->setCharacterSize(fontCharacterSize);
-
-        text->setFont(arial);
-        text->setText(arial!=0?
-                      "text->setFont(\"fonts/arial.ttf\");":
-                      "unable to load \"fonts/arial.ttf\"");
-        geode->addDrawable(text);
-
-        cursor.x() = text->getBoundingBox().xMax() + spacing ;
-    }
-
-    {
-        osgText::Font* times = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
-
-        osgText::Text* text = new osgText::Text;
-        text->setColor(fontColor);
-        text->setPosition(cursor);
-        text->setCharacterSize(fontCharacterSize);
-
-        geode->addDrawable(text);
-        text->setFont(times);
-        text->setText(times!=0?
-                      "text->setFont(\"fonts/times.ttf\");":
-                      "unable to load \"fonts/times.ttf\"");
-
-        cursor.x() = text->getBoundingBox().xMax() + spacing ;
-    }
-
-    cursor.x() = margin*2.0f;
-    cursor.y() = margin;
-
-    {
-        osgText::Font* dirtydoz = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
-
-        osgText::Text* text = new osgText::Text;
-        text->setColor(fontColor);
-        text->setPosition(cursor);
-        text->setCharacterSize(fontCharacterSize);
-
-        text->setFont(dirtydoz);
-        text->setText(dirtydoz!=0?
-                      "text->setFont(\"fonts/dirtydoz.ttf\");":
-                      "unable to load \"fonts/dirtydoz.ttf\"");
-        geode->addDrawable(text);
-
-        cursor.x() = text->getBoundingBox().xMax() + spacing ;
-    }
-
-    {
-        osgText::Font* fudd = new osgText::Font(new osgQt::QFontImplementation(QFont("Times")));
-
-        osgText::Text* text = new osgText::Text;
-        text->setColor(fontColor);
-        text->setPosition(cursor);
-        text->setCharacterSize(fontCharacterSize);
-
-        text->setFont(fudd);
-        text->setText(fudd!=0?
-                      "text->setFont(\"fonts/fudd.ttf\");":
-                      "unable to load \"fonts/fudd.ttf\"");
-        geode->addDrawable(text);
-
-        cursor.x() = text->getBoundingBox().xMax() + spacing ;
-    }
-
     return rootNode;
 }
 
@@ -399,8 +300,10 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
 
     osg::Vec3 pos(center.x()-radius*.5f,center.y()-radius*.5f,center.z()-radius*.5f);
 
+    osgText::Font* font = osgText::Font::getDefaultFont();
+
     osgText::Text* text1 = new osgText::Text;
-    text1->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text1->setFont(font);
     text1->setCharacterSize(characterSize);
     text1->setPosition(pos);
     text1->setAxisAlignment(osgText::Text::XY_PLANE);
@@ -408,7 +311,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
     geode->addDrawable(text1);
 
     osgText::Text* text2 = new osgText::Text;
-    text2->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text2->setFont(font);
     text2->setCharacterSize(characterSize);
     text2->setPosition(pos);
     text2->setAxisAlignment(osgText::Text::YZ_PLANE);
@@ -416,7 +319,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
     geode->addDrawable(text2);
 
     osgText::Text* text3 = new osgText::Text;
-    text3->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text3->setFont(font);
     text3->setCharacterSize(characterSize);
     text3->setPosition(pos);
     text3->setAxisAlignment(osgText::Text::XZ_PLANE);
@@ -425,7 +328,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
 
 
     osgText::Text* text4 = new osgText::Text;
-    text4->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text4->setFont(font);
     text4->setCharacterSize(characterSize);
     text4->setPosition(center);
     text4->setAxisAlignment(osgText::Text::SCREEN);
@@ -434,8 +337,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
 
     osgText::Text* text5 = new osgText::Text;
     text5->setColor(characterSizeModeColor);
-    text5->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
-    //text5->setCharacterSize(characterSize);
+    text5->setFont(font);
     text5->setCharacterSize(32.0f); // medium
     text5->setPosition(center - osg::Vec3(0.0, 0.0, 0.2));
     text5->setAxisAlignment(osgText::Text::SCREEN);
@@ -445,7 +347,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
 
     osgText::Text* text6 = new osgText::Text;
     text6->setColor(characterSizeModeColor);
-    text6->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text6->setFont(font);
     text6->setCharacterSize(characterSize);
     text6->setPosition(center - osg::Vec3(0.0, 0.0, 0.4));
     text6->setAxisAlignment(osgText::Text::SCREEN);
@@ -455,7 +357,7 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
 
     osgText::Text* text7 = new osgText::Text;
     text7->setColor(characterSizeModeColor);
-    text7->setFont(new osgText::Font(new osgQt::QFontImplementation(QFont("Times"))));
+    text7->setFont(font);
     text7->setCharacterSize(characterSize);
     text7->setPosition(center - osg::Vec3(0.0, 0.0, 0.6));
     text7->setAxisAlignment(osgText::Text::SCREEN);
@@ -482,58 +384,15 @@ osg::Group* create3DText(const osg::Vec3& center,float radius)
     return rootNode;
 }
 
-class MainWindow : public QWidget {
-public:
-    MainWindow()
-    {
-        osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits(osg::DisplaySettings::instance().get());
-        traits->width = width();
-        traits->height = height();
-        traits->doubleBuffer = true;
-        osgQt::GraphicsWindowQt* graphicsWindow = new osgQt::GraphicsWindowQt(traits.get());
-
-        QGridLayout* grid = new QGridLayout;
-        grid->setMargin(0);
-        grid->addWidget(graphicsWindow->getGLWidget(), 0, 0);
-        setLayout(grid);
-
-        _viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
-
-        osg::Camera* camera = _viewer.getCamera();
-        camera->setGraphicsContext(graphicsWindow);
-        camera->setViewport(new osg::Viewport(0, 0, width(), height()));
-
-        // set the draw and read buffers up for a double buffered window with rendering going to back buffer
-        camera->setDrawBuffer(GL_BACK);
-        camera->setReadBuffer(GL_BACK);
-
-        startTimer(10);
-    }
-
-    virtual void paintEvent(QPaintEvent* /*event*/)
-    {
-        _viewer.frame();
-    }
-    virtual void timerEvent(QTimerEvent* /*event*/)
-    {
-        _viewer.frame();
-    }
-
-    void setSceneData(osg::Node* node)
-    {
-        _viewer.setSceneData(node);
-    }
-    void setCameraManipulator(osgGA::CameraManipulator* manipulator, bool resetPosition = true)
-    {
-        _viewer.setCameraManipulator(manipulator, resetPosition);
-    }
-
-private:
-    osgViewer::Viewer _viewer;
-};
-
 int main(int argc, char** argv)
 {
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    format.setDepthBufferSize(24);
+    format.setSamples(8);
+    format.setStencilBufferSize(8);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    QSurfaceFormat::setDefaultFormat(format);
+
     QApplication app(argc, argv);
 
     // prepare scene.
@@ -554,12 +413,18 @@ int main(int argc, char** argv)
     group->addChild(camera.get());
     group->addChild(create3DText(center, radius));
 
-    // The qt window
-    MainWindow widget;
+    // Create viewer and widget
+    osgViewer::Viewer viewer;
+    osgQOpenGLWidget widget;
+    widget.setOsgViewer(&viewer);
 
-    // set the scene to render
-    widget.setSceneData(group.get());
-    widget.setCameraManipulator(new osgGA::TrackballManipulator);
+    QObject::connect(&widget, &osgQOpenGLWidget::initialized,
+        [&group, &viewer]()
+    {
+        // set the scene to render
+        viewer.setSceneData(group.get());
+        viewer.setCameraManipulator(new osgGA::TrackballManipulator);
+    });
 
     widget.setGeometry(100, 100, 800, 600);
     widget.show();

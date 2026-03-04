@@ -464,6 +464,176 @@ MACRO(SETUP_EXAMPLE EXAMPLE_NAME)
 
         SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES FOLDER "Examples")
 
+        # Add Qt plugins directory to PATH for Windows
+        IF(WIN32)
+            SET(QT_BIN_DIR "")
+            SET(QT_PLUGINS_DIR "")
+            SET(QT_BIN_DIR_DEBUG "")
+            SET(QT_PLUGINS_DIR_DEBUG "")
+            SET(QT_VERSION_MAJOR 0)
+            
+            # Detect Qt version from available targets
+            IF(TARGET Qt6::Core)
+                SET(QT_VERSION_MAJOR 6)
+            ELSEIF(TARGET Qt5::Core)
+                SET(QT_VERSION_MAJOR 5)
+            ENDIF()
+            MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: Detected Qt${QT_VERSION_MAJOR}")
+            
+            # Try to get Qt location from vcpkg variables first
+            IF(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+                IF(QT_VERSION_MAJOR EQUAL 6)
+                    # Qt6 plugins are in Qt6/plugins subdirectory
+                    SET(QT_BIN_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
+                    SET(QT_PLUGINS_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/Qt6/plugins")
+                    SET(QT_BIN_DIR_DEBUG "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin")
+                    SET(QT_PLUGINS_DIR_DEBUG "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/Qt6/plugins")
+                ELSE()
+                    # Qt5 plugins are directly in plugins directory
+                    SET(QT_BIN_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
+                    SET(QT_PLUGINS_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/plugins")
+                    SET(QT_BIN_DIR_DEBUG "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/bin")
+                    SET(QT_PLUGINS_DIR_DEBUG "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/plugins")
+                ENDIF()
+                
+                # Set OSG plugin paths
+                # For vcpkg, plugins are in plugins directory, not lib directory
+                # Note: OSG will automatically look for osgPlugins-<version> subdirectory
+                SET(OSG_PLUGINS_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/plugins")
+                SET(OSG_PLUGINS_DIR_DEBUG "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/plugins")
+                MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: OSG_PLUGINS_DIR=${OSG_PLUGINS_DIR}")
+                MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: OSG_PLUGINS_DIR_DEBUG=${OSG_PLUGINS_DIR_DEBUG}")
+            ENDIF()
+            
+            # Fallback to Qt target properties if vcpkg variables not available
+            IF(NOT QT_PLUGINS_DIR)
+                IF(TARGET Qt6::Core)
+                    GET_TARGET_PROPERTY(QT_CORE_LOCATION Qt6::Core LOCATION)
+                    IF(QT_CORE_LOCATION)
+                        GET_FILENAME_COMPONENT(QT_BIN_DIR "${QT_CORE_LOCATION}" DIRECTORY)
+                        SET(QT_PLUGINS_DIR "${QT_BIN_DIR}/../Qt6/plugins")
+                        SET(QT_BIN_DIR_DEBUG "${QT_BIN_DIR}")
+                        SET(QT_PLUGINS_DIR_DEBUG "${QT_PLUGINS_DIR}")
+                    ENDIF()
+                ELSEIF(TARGET Qt5::Core)
+                    GET_TARGET_PROPERTY(QT_CORE_LOCATION Qt5::Core LOCATION)
+                    IF(QT_CORE_LOCATION)
+                        GET_FILENAME_COMPONENT(QT_BIN_DIR "${QT_CORE_LOCATION}" DIRECTORY)
+                        SET(QT_PLUGINS_DIR "${QT_BIN_DIR}/../plugins")
+                        SET(QT_BIN_DIR_DEBUG "${QT_BIN_DIR}")
+                        SET(QT_PLUGINS_DIR_DEBUG "${QT_PLUGINS_DIR}")
+                    ENDIF()
+                ENDIF()
+            ENDIF()
+            
+            # Final fallback: try to derive from Qt*_DIR variables
+            IF(NOT QT_PLUGINS_DIR)
+                IF(DEFINED Qt6Core_DIR)
+                    GET_FILENAME_COMPONENT(QT_CMAKE_DIR "${Qt6Core_DIR}" DIRECTORY)
+                    GET_FILENAME_COMPONENT(QT_ROOT "${QT_CMAKE_DIR}" DIRECTORY)
+                    SET(QT_BIN_DIR "${QT_ROOT}/bin")
+                    SET(QT_PLUGINS_DIR "${QT_ROOT}/Qt6/plugins")
+                    SET(QT_BIN_DIR_DEBUG "${QT_BIN_DIR}")
+                    SET(QT_PLUGINS_DIR_DEBUG "${QT_PLUGINS_DIR}")
+                ELSEIF(DEFINED Qt5Core_DIR)
+                    GET_FILENAME_COMPONENT(QT_CMAKE_DIR "${Qt5Core_DIR}" DIRECTORY)
+                    GET_FILENAME_COMPONENT(QT_ROOT "${QT_CMAKE_DIR}" DIRECTORY)
+                    SET(QT_BIN_DIR "${QT_ROOT}/bin")
+                    SET(QT_PLUGINS_DIR "${QT_ROOT}/plugins")
+                    SET(QT_BIN_DIR_DEBUG "${QT_BIN_DIR}")
+                    SET(QT_PLUGINS_DIR_DEBUG "${QT_PLUGINS_DIR}")
+                ENDIF()
+            ENDIF()
+            
+            IF(QT_PLUGINS_DIR AND QT_BIN_DIR)
+                MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: QT_BIN_DIR=${QT_BIN_DIR}")
+                MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: QT_PLUGINS_DIR=${QT_PLUGINS_DIR}")
+                IF(QT_PLUGINS_DIR_DEBUG)
+                    MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: QT_PLUGINS_DIR_DEBUG=${QT_PLUGINS_DIR_DEBUG}")
+                ENDIF()
+                
+                # Set Visual Studio debugger environment variables
+                # VS_DEBUGGER_ENVIRONMENT: Sets the 'Environment' property for debugging
+                # Use debug paths for debug builds if available
+                
+                # Check if debug directories exist
+                SET(USE_DEBUG_PATHS FALSE)
+                IF(QT_BIN_DIR_DEBUG AND QT_PLUGINS_DIR_DEBUG)
+                    IF(EXISTS "${QT_BIN_DIR_DEBUG}" AND EXISTS "${QT_PLUGINS_DIR_DEBUG}")
+                        SET(USE_DEBUG_PATHS TRUE)
+                    ENDIF()
+                ENDIF()
+                
+                IF(USE_DEBUG_PATHS)
+                    # For vcpkg, use debug paths (which contain the 'd' suffixed DLLs)
+                    # Use semicolon to separate multiple paths in PATH variable
+                    SET(QT_ENVIRONMENT "PATH=${QT_BIN_DIR_DEBUG};${QT_BIN_DIR};%PATH%\nQT_QPA_PLATFORM_PLUGIN_PATH=${QT_PLUGINS_DIR_DEBUG}\nQT_PLUGIN_PATH=${QT_PLUGINS_DIR_DEBUG}\nQT_DEBUG_PLUGINS=1")
+                    # Add OSG plugin path
+                    IF(OSG_PLUGINS_DIR_DEBUG)
+                        SET(QT_ENVIRONMENT "${QT_ENVIRONMENT}\nOSG_LIBRARY_PATH=${OSG_PLUGINS_DIR_DEBUG};${OSG_PLUGINS_DIR}")
+                    ELSEIF(OSG_PLUGINS_DIR)
+                        SET(QT_ENVIRONMENT "${QT_ENVIRONMENT}\nOSG_LIBRARY_PATH=${OSG_PLUGINS_DIR}")
+                    ENDIF()
+                    MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: Using Debug paths")
+                ELSE()
+                    SET(QT_ENVIRONMENT "PATH=${QT_BIN_DIR};%PATH%\nQT_QPA_PLATFORM_PLUGIN_PATH=${QT_PLUGINS_DIR}\nQT_PLUGIN_PATH=${QT_PLUGINS_DIR}\nQT_DEBUG_PLUGINS=1")
+                    # Add OSG plugin path
+                    IF(OSG_PLUGINS_DIR)
+                        SET(QT_ENVIRONMENT "${QT_ENVIRONMENT}\nOSG_LIBRARY_PATH=${OSG_PLUGINS_DIR}")
+                    ENDIF()
+                    MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: Using Release paths")
+                ENDIF()
+                
+                SET_PROPERTY(TARGET ${TARGET_TARGETNAME} PROPERTY VS_DEBUGGER_ENVIRONMENT "${QT_ENVIRONMENT}")
+                MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: VS_DEBUGGER_ENVIRONMENT=${QT_ENVIRONMENT}")
+                
+                # Additional MSVC-specific properties (optional)
+                # VS_DEBUGGER_WORKING_DIRECTORY: Sets the working directory for debugging
+                SET_PROPERTY(TARGET ${TARGET_TARGETNAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+                
+                # VS_DEBUGGER_COMMAND_ARGUMENTS: Sets command line arguments for debugging
+                # Try to find a sample model file for osgviewerQt
+                IF(${TARGET_NAME} STREQUAL "osgviewerQt" OR ${TARGET_NAME} STREQUAL "osgviewerQt-qt5" OR ${TARGET_NAME} STREQUAL "osgviewerQt-qt6")
+                    # Search for OSG sample data files
+                    SET(OSG_SAMPLE_FILE "")
+                    
+                    # Check vcpkg installed directory for osg data
+                    IF(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+                        SET(VCPKG_OSG_DATA_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/osg/data")
+                        IF(EXISTS "${VCPKG_OSG_DATA_DIR}")
+                            # Look for common sample files
+                            FOREACH(SAMPLE_FILE "cessnafire.osg" "cow.osg" "glider.osg" "sphere.osg")
+                                IF(EXISTS "${VCPKG_OSG_DATA_DIR}/${SAMPLE_FILE}")
+                                    SET(OSG_SAMPLE_FILE "${VCPKG_OSG_DATA_DIR}/${SAMPLE_FILE}")
+                                    BREAK()
+                                ENDIF()
+                            ENDFOREACH()
+                        ENDIF()
+                    ENDIF()
+                    
+                    # Check standard OSG data environment variable
+                    IF(NOT OSG_SAMPLE_FILE)
+                        SET(OSG_FILE_PATH "$ENV{OSG_FILE_PATH}")
+                        IF(OSG_FILE_PATH)
+                            FOREACH(SAMPLE_FILE "cessnafire.osg" "cow.osg" "glider.osg" "sphere.osg")
+                                IF(EXISTS "${OSG_FILE_PATH}/${SAMPLE_FILE}")
+                                    SET(OSG_SAMPLE_FILE "${OSG_FILE_PATH}/${SAMPLE_FILE}")
+                                    BREAK()
+                                ENDIF()
+                            ENDFOREACH()
+                        ENDIF()
+                    ENDIF()
+                    
+                    IF(OSG_SAMPLE_FILE)
+                        SET_PROPERTY(TARGET ${TARGET_TARGETNAME} PROPERTY VS_DEBUGGER_COMMAND_ARGUMENTS "${OSG_SAMPLE_FILE}")
+                        MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: VS_DEBUGGER_COMMAND_ARGUMENTS=${OSG_SAMPLE_FILE}")
+                    ELSE()
+                        MESSAGE(STATUS "Example ${TARGET_TARGETNAME}: No OSG sample file found. Please set OSG_FILE_PATH environment variable or pass a model file as argument.")
+                    ENDIF()
+                ENDIF()
+            ENDIF()
+        ENDIF()
+
         IF(APPLE)
             INSTALL(TARGETS ${TARGET_TARGETNAME} RUNTIME DESTINATION share/OpenSceneGraph/bin BUNDLE DESTINATION share/OpenSceneGraph/bin )
         ELSE(APPLE)

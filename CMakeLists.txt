@@ -99,9 +99,10 @@ PROJECT(osgQOpenGL VERSION ${OSGQOPENGL_VERSION} LANGUAGES CXX)
 
 INCLUDE(GNUInstallDirs)
 FIND_PACKAGE(OpenSceneGraph 3.6.0 REQUIRED osgDB osgGA osgUtil osgText osgViewer osgWidget)
-# Set the OPENSCENEGRAPH_SOVERSION and OPENSCENEGRAPH_VERSION to leverage existing macros
+# Set the OPENSCENEGRAPH_SOVERSION to leverage existing macros
 SET(OPENSCENEGRAPH_SOVERSION ${OSGQOPENGL_SOVERSION})
-SET(OPENSCENEGRAPH_VERSION ${OSGQOPENGL_VERSION})
+# Use OPENSCENEGRAPH_VERSION from FindOpenSceneGraph module
+# This ensures we use the actual installed OSG version, not osgQOpenGL version
 
 SET(OSG_PLUGINS osgPlugins-${OPENSCENEGRAPH_VERSION})
 

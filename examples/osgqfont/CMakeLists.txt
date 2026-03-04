@@ -2,20 +2,37 @@
 
 
 SET(TARGET_SRC osgqfont.cpp )
-SET(TARGET_LIBRARIES  ${OPENSCENEGRAPH_LIBRARIES})
-IF ( NOT Qt5Widgets_FOUND )
+
+SET(TARGET_LIBRARIES_VARS
+    OSG_LIBRARY
+    OSGUTIL_LIBRARY
+    OSGVIEWER_LIBRARY
+    OSGGA_LIBRARY
+    OSGDB_LIBRARY
+    OSGTEXT_LIBRARY
+    OPENTHREADS_LIBRARY
+)
+
+IF ( NOT Qt5Widgets_FOUND AND NOT Qt6Widgets_FOUND )
     INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTOPENGL_INCLUDE_DIR} )
     SET(TARGET_EXTERNAL_LIBRARIES ${QT_QTCORE_LIBRARY_RELEASE} ${QT_QTGUI_LIBRARY_RELEASE} ${QT_QTOPENGL_LIBRARY_RELEASE} )
 ENDIF()
 
 #### end var setup  ###
-IF ( Qt5Widgets_FOUND )
+IF ( Qt6Widgets_FOUND )
+    SET ( EXAMPLE_NAME osgqfont-qt6 )
+ELSEIF ( Qt5Widgets_FOUND )
     SET ( EXAMPLE_NAME osgqfont-qt5 )
 ELSE()
     SET ( EXAMPLE_NAME osgqfont )
 ENDIF()
 SETUP_EXAMPLE(${EXAMPLE_NAME})
 
-IF ( Qt5Widgets_FOUND )
-    qt5_use_modules( example_${EXAMPLE_NAME} Widgets OpenGL )
-ENDIF( Qt5Widgets_FOUND )
+IF ( Qt6Widgets_FOUND )
+    target_link_libraries(example_${EXAMPLE_NAME} Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets)
+ELSEIF ( Qt5Widgets_FOUND )
+    target_link_libraries(example_${EXAMPLE_NAME} Qt5::Widgets Qt5::OpenGL)
+ENDIF()
+
+# Link with osgQOpenGL library
+target_link_libraries(example_${EXAMPLE_NAME} osgQOpenGL)
