@@ -1,0 +1,24 @@
+{
+  "name": "osgqopengl",
+  "version-date": "2026-01-15",
+  "description": "OpenSceneGraph Qt library for using Qt with OpenSceneGraph",
+  "homepage": "https://github.com/emminizer/osgQOpenGL",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "osg",
+      "version>=": "3.5.4"
+    },
+    {
+      "name": "qtbase"
+    },
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}
