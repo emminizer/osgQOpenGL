@@ -12,9 +12,9 @@ else()
     vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO yanzixiang/osgQOpenGL
-        REF 1efa1b4
-        SHA512 1292c7914bd3b85cc82142a3503abcda9e7ed2767049a55f5378479fbde9199b87e914ef9ca1de3d3609f4e57f6f9580eb88c8cd34d4607a04db359eec57a86c
-        HEAD_REF main
+        REF 3e75d46
+        SHA512 1eb7a401a894ceb9b2292da1cd9626f2c74335a4e1f0702fd14aac9a1a047c63a11093576197bd128926f06b2497725026f1ecc1ac8fa320eb8f8b50086bf8d5
+        HEAD_REF example_and_vcpkg
     )
 endif()
 
