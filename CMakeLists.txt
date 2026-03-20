@@ -1,6 +1,6 @@
 SET(OSGQOPENGL_MAJOR_VERSION 4)
 SET(OSGQOPENGL_MINOR_VERSION 1)
-SET(OSGQOPENGL_PATCH_VERSION 1)
+SET(OSGQOPENGL_PATCH_VERSION 2)
 SET(OSGQOPENGL_SOVERSION 147)
 SET(OSGQOPENGL_VERSION ${OSGQOPENGL_MAJOR_VERSION}.${OSGQOPENGL_MINOR_VERSION}.${OSGQOPENGL_PATCH_VERSION})
 
@@ -99,9 +99,10 @@ PROJECT(osgQOpenGL VERSION ${OSGQOPENGL_VERSION} LANGUAGES CXX)
 
 INCLUDE(GNUInstallDirs)
 FIND_PACKAGE(OpenSceneGraph 3.6.0 REQUIRED osgDB osgGA osgUtil osgText osgViewer osgWidget)
-# Set the OPENSCENEGRAPH_SOVERSION and OPENSCENEGRAPH_VERSION to leverage existing macros
+# Set the OPENSCENEGRAPH_SOVERSION to leverage existing macros
 SET(OPENSCENEGRAPH_SOVERSION ${OSGQOPENGL_SOVERSION})
-SET(OPENSCENEGRAPH_VERSION ${OSGQOPENGL_VERSION})
+# Use OPENSCENEGRAPH_VERSION from FindOpenSceneGraph module
+# This ensures we use the actual installed OSG version, not osgQOpenGL version
 
 SET(OSG_PLUGINS osgPlugins-${OPENSCENEGRAPH_VERSION})
 
@@ -439,11 +440,17 @@ INCLUDE(OsgMacroUtils)
 # QUIET option disables messages if the package cannot be found.
 
 # Try to find Qt6, then Qt5, and if both fail give an error message
-find_package(Qt6 COMPONENTS Widgets OpenGL OpenGLWidgets QUIET)
-if(NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Widgets OpenGL QUIET)
-    if(NOT Qt5_FOUND)
-        message(FATAL_ERROR "Could not find either Qt6 or Qt5. This project requires Qt.")
+if(DESIRED_QT_VERSION EQUAL 6)
+    find_package(Qt6 COMPONENTS Widgets OpenGL OpenGLWidgets REQUIRED)
+elseif(DESIRED_QT_VERSION EQUAL 5)
+    find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
+else()
+    find_package(Qt6 COMPONENTS Widgets OpenGL OpenGLWidgets QUIET)
+    if(NOT Qt6_FOUND)
+        find_package(Qt5 COMPONENTS Widgets OpenGL QUIET)
+        if(NOT Qt5_FOUND)
+            message(FATAL_ERROR "Could not find either Qt6 or Qt5. This project requires Qt.")
+        endif()
     endif()
 endif()
 
