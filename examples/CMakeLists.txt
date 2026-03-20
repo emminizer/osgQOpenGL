@@ -6,7 +6,9 @@ SET(TARGET_DEFAULT_LABEL_PREFIX "Examples")
 
 IF(DYNAMIC_OPENSCENEGRAPH)
 
+# Examples compatible with osgQOpenGL library
 ADD_SUBDIRECTORY(osgviewerQt)
+ADD_SUBDIRECTORY(osgqfont)
 
 ENDIF()
 

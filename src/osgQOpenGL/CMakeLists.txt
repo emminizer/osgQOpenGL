@@ -50,14 +50,6 @@ set(TARGET_SRC
     ${OPENSCENEGRAPH_VERSIONINFO_RC}
 )
 
-if(QT_VERSION_MAJOR EQUAL 5)
-    set(TARGET_LIBRARIES Qt5::Widgets Qt5::OpenGL)
-    set(_QT_COMPONENTS "Widgets OpenGL")
-else()
-    set(TARGET_LIBRARIES Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets)
-    set(_QT_COMPONENTS "Widgets OpenGL OpenGLWidgets")
-endif()
-
 set(TARGET_LIBRARIES_VARS
     OSG_LIBRARY
     OSGUTIL_LIBRARY
@@ -69,12 +61,24 @@ set(TARGET_LIBRARIES_VARS
 
 SETUP_LIBRARY(${LIB_NAME})
 target_include_directories(${LIB_NAME} PUBLIC $<INSTALL_INTERFACE:include>)
+
+# Link to Qt; specify _QT_COMPONENTS for the configure_file() below for osgOpenGLConfig.cmake
+if(QT_VERSION_MAJOR EQUAL 5)
+    set(_QT_COMPONENTS "Widgets OpenGL")
+    target_link_libraries(${LIB_NAME} PUBLIC Qt5::Widgets Qt5::OpenGL)
+else()
+    set(_QT_COMPONENTS "Widgets OpenGL OpenGLWidgets")
+    target_link_libraries(${LIB_NAME} PUBLIC Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets)
+endif()
+
 generate_export_header(${LIB_NAME} BASE_NAME osgQOpenGL EXPORT_FILE_NAME "Export")
 
 # Add an alias target for the latest version
 if(OSGQOPENGL_APPEND_QT_VERSION)
     add_library(osgQOpenGL ALIAS ${LIB_NAME})
 endif()
+# Add an internal alias for osgQt::osgQOpenGL for consistency
+add_library(osgQt::osgQOpenGL ALIAS ${LIB_NAME})
 
 install(TARGETS ${LIB_NAME}
     EXPORT ${LIB_NAME}-targets

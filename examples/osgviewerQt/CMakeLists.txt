@@ -1,24 +1,16 @@
-SET( TARGET_SRC
-    osgviewerQt.cpp
-)
+SET(TARGET_SRC osgviewerQt.cpp)
 
 SET(TARGET_LIBRARIES_VARS
     OSG_LIBRARY
+    OSGDB_LIBRARY
+    OSGGA_LIBRARY
+    OSGTEXT_LIBRARY
     OSGUTIL_LIBRARY
     OSGVIEWER_LIBRARY
-    OSGGA_LIBRARY
-    OSGDB_LIBRARY
     OPENTHREADS_LIBRARY
 )
+set(TARGET_LIBRARIES osgQt::osgQOpenGL Qt::Widgets)
 
+SET(EXAMPLE_NAME osgviewerQt)
 
-SET (EXAMPLE_NAME osgviewerQt )
-
-SETUP_EXAMPLE( ${EXAMPLE_NAME} )
-
-SET(TARGET_LIBRARIES Qt5::Widgets Qt5::OpenGL)
-
-target_link_libraries(example_${EXAMPLE_NAME} osgQOpenGL)
-
-qt5_use_modules( example_${EXAMPLE_NAME} Widgets OpenGL )
-
+SETUP_EXAMPLE(${EXAMPLE_NAME})
