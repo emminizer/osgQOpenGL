@@ -1,5 +1,8 @@
+# _TARGET_LIBRARIES is used in the Config.cmake.in to set proper library targets
+set(_TARGET_LIBRARIES Qt::Widgets Qt::OpenGL)
 if(TARGET Qt6::OpenGL)
     set(QT_VERSION_MAJOR 6)
+    list(APPEND _TARGET_LIBRARIES Qt::OpenGLWidgets)
 elseif(TARGET Qt5::OpenGL)
     set(QT_VERSION_MAJOR 5)
 else()

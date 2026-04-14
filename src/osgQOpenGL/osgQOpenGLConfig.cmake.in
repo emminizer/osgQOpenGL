@@ -16,7 +16,7 @@ if(NOT _OSGQOPENGL_ALREADY_DEFINED)
     # Replace the interface link libraries with those found by OSG, to allow this to be more easily relocatable.
     # Without this, absolute paths to OSG are stored in the target, making the output library non-relocatable
     # to other machines unless they have OSG in the exact same location.
-    set_target_properties(osgQt::@LIB_NAME@ PROPERTIES INTERFACE_LINK_LIBRARIES "@TARGET_LIBRARIES@")
+    set_target_properties(osgQt::@LIB_NAME@ PROPERTIES INTERFACE_LINK_LIBRARIES "@_TARGET_LIBRARIES@")
     target_link_libraries(osgQt::@LIB_NAME@ INTERFACE ${OPENSCENEGRAPH_LIBRARIES})
     target_include_directories(osgQt::@LIB_NAME@ INTERFACE ${OPENSCENEGRAPH_INCLUDE_DIRS})
 endif()
