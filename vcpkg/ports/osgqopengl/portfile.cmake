@@ -2,8 +2,8 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO emminizer/osgQOpenGL
     HEAD_REF main
-    REF c517b75
-    SHA512 7780fb7dd6cfc33082e5c580d9257cebf7eec5b09e799a8b872e635c9eecac75063b05fc1a0d84b76c3c377496b0e7ee71f0ea2c4ba6eaa9726edacfdcc9d0ee
+    REF 689a7e4
+    SHA512 783b4f940e2611bf91d7dfacf85c4670e5ca392c7e2222445203bed060a2e295f969bf1851aefd8211f94b6bd34ab3b9f46149a53e4961acfcbb2b9e90e2705a
     PATCHES
 )
 
