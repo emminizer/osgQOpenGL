@@ -66,6 +66,12 @@ public:
     //! Retrieve the graphics window
     osgViewer::GraphicsWindow* getGraphicsWindow() const;
 
+    //! Retrieve the current window scale (device pixel ratio)
+    double getWindowScale() const
+    {
+        return m_windowScale;
+    }
+
     bool continuousUpdate() const
     {
         return m_continuousUpdate;

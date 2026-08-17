@@ -74,6 +74,10 @@ void osgQOpenGLWindow::paintGL()
 {
     OpenThreads::ScopedReadLock locker(_osgMutex);
 
+    const double currentDpr = devicePixelRatio();
+    if (currentDpr != m_renderer->getWindowScale())
+        m_renderer->resize(width(), height(), currentDpr);
+
     // Must constantly set the default FBO ID, because Qt can change it on resize or other events
     m_renderer->getGraphicsContext()->setDefaultFboId(defaultFramebufferObject());
 
@@ -150,6 +154,7 @@ void osgQOpenGLWindow::createRenderer()
     if (_viewer.valid())
         m_renderer->setViewer(_viewer.get());
     m_renderer->setTimerInterval(_timerIntervalMs);
+
     const double pixelRatio = devicePixelRatio();
     m_renderer->setupOSG(width(), height(), pixelRatio);
     m_renderer->setRenderFunction(_renderFunction);
