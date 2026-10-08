@@ -277,8 +277,13 @@ void OSGRenderer::mousePressEvent(QMouseEvent* event)
     }
 
     setKeyboardModifiers(event);
-    m_osgWinEmb->getEventQueue()->mouseButtonPress(event->x() * m_windowScale,
-                                                   event->y() * m_windowScale, button);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const QPointF position = event->position();
+#else
+    const QPointF position = event->localPos();
+#endif
+    m_osgWinEmb->getEventQueue()->mouseButtonPress(position.x() * m_windowScale,
+                                                   position.y() * m_windowScale, button);
 }
 
 void OSGRenderer::mouseReleaseEvent(QMouseEvent* event)
@@ -309,8 +314,13 @@ void OSGRenderer::mouseReleaseEvent(QMouseEvent* event)
     }
 
     setKeyboardModifiers(event);
-    m_osgWinEmb->getEventQueue()->mouseButtonRelease(event->x() * m_windowScale,
-                                                     event->y() * m_windowScale, button);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const QPointF position = event->position();
+#else
+    const QPointF position = event->localPos();
+#endif
+    m_osgWinEmb->getEventQueue()->mouseButtonRelease(position.x() * m_windowScale,
+                                                     position.y() * m_windowScale, button);
 }
 
 void OSGRenderer::mouseDoubleClickEvent(QMouseEvent* event)
@@ -341,15 +351,25 @@ void OSGRenderer::mouseDoubleClickEvent(QMouseEvent* event)
     }
 
     setKeyboardModifiers(event);
-    m_osgWinEmb->getEventQueue()->mouseDoubleButtonPress(event->x() * m_windowScale,
-                                                         event->y() * m_windowScale, button);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const QPointF position = event->position();
+#else
+    const QPointF position = event->localPos();
+#endif
+    m_osgWinEmb->getEventQueue()->mouseDoubleButtonPress(position.x() * m_windowScale,
+                                                         position.y() * m_windowScale, button);
 }
 
 void OSGRenderer::mouseMoveEvent(QMouseEvent* event)
 {
     setKeyboardModifiers(event);
-    m_osgWinEmb->getEventQueue()->mouseMotion(event->x() * m_windowScale,
-                                              event->y() * m_windowScale);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const QPointF position = event->position();
+#else
+    const QPointF position = event->localPos();
+#endif
+    m_osgWinEmb->getEventQueue()->mouseMotion(position.x() * m_windowScale,
+                                              position.y() * m_windowScale);
 }
 
 void OSGRenderer::wheelEvent(QWheelEvent* event)
