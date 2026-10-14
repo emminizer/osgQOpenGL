@@ -3,7 +3,6 @@
 
 #include <osgViewer/Viewer>
 #include <osg/GL>
-
 #include <QKeyEvent>
 #include <QWindow>
 
@@ -17,6 +16,15 @@ osgQOpenGLWidget::osgQOpenGLWidget(QWidget* parent)
 
 osgQOpenGLWidget::~osgQOpenGLWidget()
 {
+    destroyRenderer_();
+}
+
+void osgQOpenGLWidget::destroyRenderer_()
+{
+    OpenThreads::ScopedWriteLock locker(_osgMutex);
+
+    delete m_renderer;
+    m_renderer = nullptr;
 }
 
 osgViewer::ViewerBase* osgQOpenGLWidget::getOsgViewer() const
@@ -55,6 +63,11 @@ OpenThreads::ReadWriteMutex* osgQOpenGLWidget::mutex()
 
 void osgQOpenGLWidget::initializeGL()
 {
+    // Qt can invoke initializeGL() again after QOpenGLWidget is reparented.
+    // Retire the renderer associated with the prior Qt context before binding
+    // the viewer to a replacement GraphicsWindowEmbedded.
+    destroyRenderer_();
+
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
@@ -147,6 +160,9 @@ void osgQOpenGLWidget::setDefaultDisplaySettings()
 
 void osgQOpenGLWidget::createRenderer()
 {
+    // Should not be able to be called with a valid renderer already set
+    Q_ASSERT(m_renderer == nullptr);
+
     // call this before creating a View...
     setDefaultDisplaySettings();
     m_renderer = new OSGRenderer(this);

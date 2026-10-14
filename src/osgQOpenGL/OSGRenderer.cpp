@@ -120,6 +120,20 @@ OSGRenderer::OSGRenderer(QObject* parent)
 
 OSGRenderer::~OSGRenderer()
 {
+    if (_timerId != 0)
+    {
+        killTimer(_timerId);
+        _timerId = 0;
+    }
+
+    if (m_osgWinEmb.valid())
+    {
+        // Qt owns the native context. Release OSG resources and retire the
+        // embedded GraphicsContext without asking OSG to close the externally
+        // managed native OpenGL context.
+        m_osgWinEmb->close(false);
+        m_osgWinEmb = nullptr;
+    }
 }
 
 void OSGRenderer::setViewer(osgViewer::ViewerBase* viewer)

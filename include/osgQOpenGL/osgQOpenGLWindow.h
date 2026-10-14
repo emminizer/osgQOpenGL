@@ -38,11 +38,11 @@ class OSGQOPENGL_EXPORT osgQOpenGLWindow : public QOpenGLWindow,
     Q_OBJECT
 
 protected:
-    // Owned and deleted through Qt parent
+    // Owned by this window and explicitly retired when Qt recreates its context
     OSGRenderer* m_renderer {nullptr};
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
-	bool _isFirstFrame {true};
+    bool _isFirstFrame {true};
     int _timerIntervalMs {10};
     osg::observer_ptr<osgViewer::ViewerBase> _viewer;
     friend class OSGRenderer;
@@ -104,6 +104,9 @@ protected:
     virtual void wheelEvent(QWheelEvent* event) override;
 
     void createRenderer();
+
+private:
+    void destroyRenderer_();
 };
 
 #endif // OSGQOPENGLWINDOW_H

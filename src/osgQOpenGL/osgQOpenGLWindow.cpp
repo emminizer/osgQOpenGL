@@ -19,6 +19,15 @@ osgQOpenGLWindow::osgQOpenGLWindow(QWidget* parent)
 
 osgQOpenGLWindow::~osgQOpenGLWindow()
 {
+    destroyRenderer_();
+}
+
+void osgQOpenGLWindow::destroyRenderer_()
+{
+    OpenThreads::ScopedWriteLock locker(_osgMutex);
+
+    delete m_renderer;
+    m_renderer = nullptr;
 }
 
 osgViewer::ViewerBase* osgQOpenGLWindow::getOsgViewer() const
@@ -57,6 +66,11 @@ OpenThreads::ReadWriteMutex* osgQOpenGLWindow::mutex()
 
 void osgQOpenGLWindow::initializeGL()
 {
+    // Qt can invoke initializeGL() again when it recreates this window's
+    // context. Retire the renderer associated with the prior context before
+    // binding the viewer to a replacement GraphicsWindowEmbedded.
+    destroyRenderer_();
+
     // Initializes OpenGL function resolution for the current context.
     initializeOpenGLFunctions();
     createRenderer();
@@ -148,6 +162,9 @@ void osgQOpenGLWindow::setDefaultDisplaySettings()
 
 void osgQOpenGLWindow::createRenderer()
 {
+    // Should not be able to be called with a valid renderer already set
+    Q_ASSERT(m_renderer == nullptr);
+
     // call this before creating a View...
     setDefaultDisplaySettings();
 

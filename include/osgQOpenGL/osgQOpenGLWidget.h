@@ -37,7 +37,7 @@ class OSGQOPENGL_EXPORT osgQOpenGLWidget : public QOpenGLWidget,
     Q_OBJECT
 
 protected:
-    // Owned and deleted through Qt parent
+    // Owned by this widget and explicitly retired when Qt recreates its context
     OSGRenderer* m_renderer {nullptr};
     bool _osgWantsToRenderFrame{true};
     OpenThreads::ReadWriteMutex _osgMutex;
@@ -102,6 +102,7 @@ protected:
     void createRenderer();
 
 private:
+    void destroyRenderer_();
 };
 
 #endif // OSGQOPENGLWIDGET_H
