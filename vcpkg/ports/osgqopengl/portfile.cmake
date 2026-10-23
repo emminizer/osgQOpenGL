@@ -38,5 +38,19 @@ file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/share"
 )
 
-vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.txt")
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
+    # osgQOpenGL's install step still creates bin/debug/bin even when built
+    # static (no DLL is actually produced); remove them so the static
+    # post-build check does not flag the spurious directories.
+    file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/bin" "${CURRENT_PACKAGES_DIR}/debug/bin")
+endif()
+
+# The port's top-level LICENSE.txt is the OpenSceneGraph Public License, but
+# the renderer sources (OSGRenderer.h / OSGRenderer.cpp) carry an explicit
+# GPL-2.0-or-later notice. Install a representative header alongside the
+# license so the GPL grant shipped in the source is preserved in the package.
+vcpkg_install_copyright(FILE_LIST
+    "${SOURCE_PATH}/LICENSE.txt"
+    "${SOURCE_PATH}/include/osgQOpenGL/OSGRenderer.h"
+)
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
